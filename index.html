@@ -559,6 +559,51 @@ body.tl-dragging,body.tl-dragging *{cursor:grabbing!important;-webkit-user-selec
 .tl-preview{width:100%;max-height:56vh;object-fit:contain;border-radius:12px;border:1px solid var(--line);background:#07070b}
 @media (max-width:640px){.tl-row{grid-template-columns:58px minmax(0,1fr)}.tl-label{font-size:20px;min-height:80px}.tl-label.long{font-size:12px}.tl-drop{min-height:80px;gap:5px;padding:5px}.tl-item,.tl-ph{width:46px}.tl-erow.top{grid-template-columns:1fr}.tl-erow.top label{display:none}}
 @media (prefers-reduced-motion:reduce){.pod,.pod-step,.rank-row,.rs-bar i,.unr,.tl-row,.tl-edit{animation:none}}
+
+/* ---------- Accueil : pile de lecture ---------- */
+.deck-wrap{--cw:clamp(128px,34vw,188px);position:relative;border-radius:20px;padding:24px;background:radial-gradient(110% 130% at 0% 0%,rgba(139,92,246,.3),transparent 55%),radial-gradient(90% 120% at 100% 100%,rgba(47,123,255,.22),transparent 60%),var(--surface);border:1px solid var(--line);display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:28px;align-items:center;overflow:hidden}
+.deck-stage{position:relative;height:calc(var(--cw) * 1.5 + 8px);touch-action:pan-y;-webkit-user-select:none;user-select:none;outline:none}
+.deck-stage:focus-visible{box-shadow:0 0 0 2px var(--violet);border-radius:14px}
+.deck-card{all:unset;position:absolute;top:4px;left:calc(50% - var(--cw) * .95);width:var(--cw);border-radius:12px;cursor:pointer;transition:transform .6s var(--spring),opacity .45s ease;will-change:transform;box-shadow:0 22px 44px -20px rgba(0,0,0,.95),0 0 0 1px rgba(255,255,255,.06);-webkit-tap-highlight-color:transparent}
+.deck-card .cover{border-radius:12px}
+.deck-card img{pointer-events:none;-webkit-user-drag:none}
+.deck-shade{position:absolute;inset:0;border-radius:12px;background:#07070b;pointer-events:none;transition:opacity .5s ease}
+.deck-stage.dragging .deck-card,.deck-stage.dragging .deck-shade{transition:none}
+.deck-card:focus-visible{outline:2px solid var(--violet);outline-offset:3px}
+.view.enter .deck-card{animation:deckIn .75s var(--spring) backwards;animation-delay:calc(var(--i,0) * 70ms)}
+@keyframes deckIn{from{opacity:0;transform:translate3d(70%,0,0) scale(.7)}}
+.deck-info{min-width:0;display:flex;flex-direction:column}
+.deck-info.swap,.hand-info.swap{animation:fadeUp .38s var(--ease-out)}
+.deck-title{font-size:clamp(21px,2.6vw,30px);font-weight:800;line-height:1.15;margin:6px 0 14px;cursor:pointer;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.deck-ctrl{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:16px}
+.deck-ctrl .icon-btn{width:44px;height:44px;font-size:20px}
+.deck-ctrl .icon-btn.plus{background:var(--grad);border-color:transparent;color:#fff;box-shadow:0 8px 22px -10px var(--violet)}
+.deck-ctrl .icon-btn:disabled{opacity:.35}
+.deck-nav{margin-left:auto;display:flex;gap:6px}
+.deck-nav .icon-btn{width:38px;height:38px;font-size:18px}
+.deck-new{margin-top:12px;font-size:12.5px;color:var(--cyan);font-weight:600}
+.empty-deck{grid-template-columns:1fr auto}
+.empty-deck h2{font-size:22px;margin:4px 0}.empty-deck p{margin:0;color:var(--muted)}
+@media (max-width:760px){.deck-wrap{grid-template-columns:1fr;padding:18px 16px;gap:16px;--cw:clamp(120px,38vw,170px)}.deck-nav{display:none}.empty-deck{grid-template-columns:1fr}}
+
+/* ---------- Accueil : main de cartes ---------- */
+.hand-wrap{container-type:inline-size;display:flex;flex-direction:column;gap:6px}
+.hand-info{width:100%;max-width:560px;margin:0 auto;min-height:168px;display:flex;flex-direction:column;justify-content:flex-end;text-align:center}
+.hand-info .deck-ctrl{justify-content:center}
+.hand-info .deck-title{margin-bottom:10px}
+.hand-hint p{margin:6px 0 0;color:var(--muted)}
+.hand{--hw:clamp(84px,21cqw,148px);--step:min(calc(var(--hw) * .64),calc((100cqw - var(--hw) - 36px) / max(calc(var(--n) - 1),1)));--rot:min(7deg,calc(42deg / var(--n)));position:relative;height:calc(var(--hw) * 2.5 + 44px);overflow:clip;margin-top:-8px}
+.hand-card{all:unset;position:absolute;bottom:40px;left:calc(50% - var(--hw) / 2);width:var(--hw);border-radius:12px;cursor:pointer;transform-origin:50% 130%;transform:translate3d(calc(var(--k) * var(--step) + var(--push) * 22px),calc(var(--k2) * 2px + var(--lift,0px)),0) rotate(calc(var(--k) * var(--rot)));transition:transform .55s var(--spring);will-change:transform;box-shadow:0 16px 32px -14px rgba(0,0,0,.95),0 0 0 1px rgba(255,255,255,.07);-webkit-tap-highlight-color:transparent}
+.hand-card .cover{border-radius:12px;transition:opacity .3s ease}
+.hand-card img{pointer-events:none;-webkit-user-drag:none}
+.hand-card.up{transform:translate3d(0,calc(var(--hw) * -.62),0) rotate(0deg) scale(1.16);box-shadow:0 30px 60px -18px rgba(0,0,0,.95),0 0 0 2px var(--violet),0 0 40px -6px rgba(139,92,246,.6)}
+.hand.has-up .hand-card:not(.up) .cover{opacity:.62}
+.hand-card:focus-visible{outline:2px solid var(--violet);outline-offset:3px}
+.hand-ep{position:absolute;left:6px;bottom:6px;font:700 10.5px/1 var(--mono);background:rgba(7,7,11,.8);padding:4px 6px;border-radius:6px;color:var(--text)}
+@media (hover:hover) and (pointer:fine){.hand-card:not(.up):hover{--lift:-24px}}
+.view.enter .hand-card{animation:deal .8s var(--spring) backwards;animation-delay:calc(var(--i,0) * 70ms + 200ms)}
+@keyframes deal{from{opacity:0;transform:translate3d(0,110%,0) rotate(0deg) scale(.85)}}
+@media (prefers-reduced-motion:reduce){.deck-card,.hand-card{transition-duration:.01s}.view.enter .deck-card,.view.enter .hand-card{animation:none}}
 </style>
 </head>
 <body>
@@ -1007,6 +1052,7 @@ function viewDashboard() {
   const statusPanel = type => `<div class="panel"><h3><span class="badge ${type}">${TYPES[type].label}</span> ${TYPES[type].plural} par catégorie</h3>
     <div class="status-list">${STATUSES.map(st => `<a href="#${libHash(type, st)}"><b class="st-${st}">${countOf(type, st)}</b><span>${statusName(st, type)}</span></a>`).join('')}</div></div>`;
   return `<div class="view">
+    ${deckHTML()}
     <section class="hero">
       <div><span class="eyebrow">Tableau de bord</span><h1>${resM.length + resA.length ? `${resM.length + resA.length} œuvre${resM.length + resA.length > 1 ? 's' : ''} en cours` : 'Rien en cours pour le moment'}</h1>
         <p>${frInt(chapters)} chapitres lus et ${frInt(episodes)} épisodes regardés au total. ${countOf(null, 'planned')} œuvre${countOf(null, 'planned') > 1 ? 's' : ''} à découvrir.</p>
@@ -1024,10 +1070,6 @@ function viewDashboard() {
       <a class="tile" style="--i:5" href="#stats"><span class="l">Épisodes regardés</span><span class="v">${frInt(episodes)}</span><span class="s">tous animés confondus</span></a>
     </section>
     ${goalsHTML()}
-    <section class="sec"><div class="sec-head"><h2>Reprendre ma lecture</h2><a href="#mangas-en-cours">Tous les mangas en cours →</a></div>
-      ${resM.length ? `<div class="rail">${resM.map(resumeHTML).join('')}</div>` : emptyHTML('Aucun manga en cours', 'Passe un manga en « En cours » ou avance d\'un chapitre pour le retrouver ici.', false)}</section>
-    <section class="sec"><div class="sec-head"><h2>Reprendre mon visionnage</h2><a href="#animes-en-cours">Tous les animés en cours →</a></div>
-      ${resA.length ? `<div class="rail">${resA.map(resumeHTML).join('')}</div>` : emptyHTML('Aucun animé en cours', 'Passe un animé en « En cours » ou avance d\'un épisode pour le retrouver ici.', false)}</section>
     ${shelfHTML('En cours', [...W].filter(w => w.status === 'current').sort(recentSort), 'tout-en-cours')}
     ${shelfHTML('À voir', [...W].filter(w => w.status === 'planned').sort((a, b) => b.createdAt - a.createdAt), 'decouvrir')}
     ${shelfHTML('Favoris', [...W].filter(w => w.favorite).sort(recentSort), 'favoris')}
@@ -1035,6 +1077,7 @@ function viewDashboard() {
     ${shelfHTML('Terminés', [...W].filter(w => w.status === 'completed').sort(recentSort), 'tout-termines')}
     ${shelfHTML('Derniers ajouts', latest, 'bibliotheque')}
     <section class="split">${statusPanel('manga')}${statusPanel('anime')}</section>
+    ${handHTML()}
   </div>`;
 }
 
@@ -1232,7 +1275,7 @@ function detailHTML(w, opts = {}) {
 function openDetail(id, srcEl) {
   const w = byId(id); if (!w) { toast('Cette œuvre n\'existe plus dans ta bibliothèque.', 'error'); return; }
   let src = null;
-  if (srcEl) { const box = srcEl.closest('.card, .poster, .resume, #nowbar, .card-cover, .pod, .rank-row, .unr'); src = box && box.querySelector('.cover'); }
+  if (srcEl) { const box = srcEl.closest('.card, .poster, .resume, #nowbar, .card-cover, .pod, .rank-row, .unr, .deck-card, .hand-card'); src = box && box.querySelector('.cover'); }
   const zoom = !!(src && !reducedMotion() && isVisible(src));
   state.openId = id; openSheet(detailHTML(w, { zoom }));
   setTint(w);
@@ -2771,6 +2814,154 @@ document.addEventListener('input', e => {
   else if (e.target.dataset && e.target.dataset.change === 'tl-color') { const r = document.querySelector(`.tl-row[data-tier="${e.target.dataset.t}"] .tl-label`); if (r) r.style.setProperty('--c', e.target.value); }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.tlSel && $('#dialog').hidden) tlSelect(state.tlSel); });
+
+/* ==========================================================
+   Accueil : pile de lecture (mangas) & main de cartes (animés)
+   ========================================================== */
+function stableOrder(key, list) {
+  const ids = new Set(list.map(w => w.id));
+  const kept = (state[key] || []).filter(id => ids.has(id));
+  const add = list.filter(w => !kept.includes(w.id)).map(w => w.id);
+  state[key] = [...add, ...kept];
+  return state[key].map(byId).filter(Boolean);
+}
+const currentOf = type => state.works.filter(w => w.type === type && w.status === 'current').sort((a, b) => b.updatedAt - a.updatedAt);
+function deckList() { return stableOrder('deckOrder', currentOf('manga').slice(0, 15)); }
+function handList() { return stableOrder('handOrder', currentOf('anime').slice(0, 12)); }
+
+/* ----- Pile de mangas ----- */
+function deckStyle(k) {
+  if (k < 0) return { t: `translate3d(${(k * 75).toFixed(1)}%,${(-k * 6).toFixed(1)}%,0) rotate(${(k * 9).toFixed(1)}deg) scale(${(1 + k * .06).toFixed(3)})`, o: Math.max(0, 1 + k * 1.4), z: 60, s: 0 };
+  const a = Math.min(k, 6);
+  return { t: `translate3d(${(a * 30).toFixed(1)}%,0,0) scale(${(1 - a * .085).toFixed(3)})`, o: k > 4 ? Math.max(0, 5 - k) : 1, z: 50 - Math.round(k * 4), s: Math.min(.7, k * .2) };
+}
+function deckIndex(list) { const i = list.findIndex(w => w.id === state.deckId); return i < 0 ? 0 : i; }
+function deckInfoHTML(w, i, n) {
+  const t = TYPES[w.type];
+  return `<span class="eyebrow">Lecture en cours · ${i + 1} / ${n}</span>
+    <h2 class="deck-title" data-action="open" data-id="${w.id}">${esc(w.title)}</h2>
+    ${progressHTML(w, true)}
+    <div class="deck-ctrl"><button class="icon-btn" type="button" data-action="dec" data-id="${w.id}" aria-label="Retirer un chapitre" ${w.current <= 0 ? 'disabled' : ''}>−</button>
+      <button class="icon-btn plus" type="button" data-action="inc" data-id="${w.id}" aria-label="Ajouter un chapitre" ${w.total && w.current >= w.total ? 'disabled' : ''}>+</button>
+      <button class="btn sm" type="button" data-action="open" data-id="${w.id}">Ouvrir la fiche</button>
+      <span class="deck-nav"><button class="icon-btn" type="button" data-action="deck-step" data-dir="-1" aria-label="Manga précédent" ${i === 0 ? 'disabled' : ''}>‹</button><button class="icon-btn" type="button" data-action="deck-step" data-dir="1" aria-label="Manga suivant" ${i >= n - 1 ? 'disabled' : ''}>›</button></span></div>
+    ${w.latest && w.latest.n && w.latest.n > w.current ? `<span class="deck-new">${w.latest.n - w.current} ${t.units} de retard sur la sortie</span>` : ''}`;
+}
+function deckHTML() {
+  const list = deckList();
+  if (!list.length) return `<section class="deck-wrap empty-deck"><div><span class="eyebrow">Lecture en cours</span><h2>Aucun manga en cours</h2><p>Passe un manga en « En cours » pour le retrouver ici, en pile de cartes.</p></div><a class="btn" href="#mangas">Mes mangas</a></section>`;
+  const idx = deckIndex(list); state.deckId = list[idx].id;
+  return `<section class="deck-wrap" aria-label="Mangas en cours de lecture">
+    <div class="deck-stage" tabindex="0" aria-roledescription="carrousel" aria-label="Fais glisser pour changer de manga">
+      ${list.map((w, i) => { const s = deckStyle(i - idx); return `<button class="deck-card" type="button" data-deck="${i}" data-id="${w.id}" aria-label="${esc(w.title)}" style="--i:${i};transform:${s.t};opacity:${s.o};z-index:${s.z}">${coverHTML(w)}<span class="deck-shade" style="opacity:${s.s}"></span></button>`; }).join('')}
+    </div>
+    <div class="deck-info" aria-live="polite">${deckInfoHTML(list[idx], idx, list.length)}</div>
+  </section>`;
+}
+function deckLayout(stage, pos) {
+  stage.querySelectorAll('.deck-card').forEach(c => {
+    const s = deckStyle(+c.dataset.deck - pos);
+    c.style.transform = s.t; c.style.opacity = s.o; c.style.zIndex = s.z;
+    const sh = c.querySelector('.deck-shade'); if (sh) sh.style.opacity = s.s;
+  });
+}
+function deckGo(i) {
+  const list = deckList(); if (!list.length) return;
+  i = Math.max(0, Math.min(list.length - 1, i));
+  const changed = state.deckId !== list[i].id;
+  state.deckId = list[i].id;
+  const stage = $('#main .deck-stage'), info = $('#main .deck-info');
+  if (stage) { stage.classList.remove('dragging'); deckLayout(stage, i); }
+  if (info && changed) { info.innerHTML = deckInfoHTML(list[i], i, list.length); info.classList.remove('swap'); void info.offsetWidth; info.classList.add('swap'); }
+}
+let deckSuppress = false;
+(function deckSwipe() {
+  let d = null, raf = 0;
+  document.addEventListener('pointerdown', e => {
+    const st = e.target.closest && e.target.closest('.deck-stage'); if (!st || e.button > 0) return;
+    const card = st.querySelector('.deck-card'); if (!card) return;
+    d = { st, x0: e.clientX, y0: e.clientY, w: card.getBoundingClientRect().width || 160, idx: deckIndex(deckList()), on: false, t: performance.now(), lx: e.clientX, v: 0 };
+  });
+  document.addEventListener('pointermove', e => {
+    if (!d) return;
+    const dx = e.clientX - d.x0, dy = e.clientY - d.y0;
+    if (!d.on) {
+      if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { d = null; return; }
+      if (Math.abs(dx) < 8) return;
+      d.on = true; d.st.classList.add('dragging');
+      try { d.st.setPointerCapture(e.pointerId); } catch (err) { }
+    }
+    const now = performance.now(); d.v = (e.clientX - d.lx) / Math.max(1, now - d.t); d.t = now; d.lx = e.clientX;
+    const n = d.st.children.length;
+    let pos = d.idx - dx / (d.w * .75);
+    if (pos < 0) pos = pos / 3; else if (pos > n - 1) pos = n - 1 + (pos - n + 1) / 3;
+    d.pos = pos;
+    cancelAnimationFrame(raf); raf = requestAnimationFrame(() => deckLayout(d ? d.st : $('#main .deck-stage'), pos));
+  });
+  const end = () => {
+    if (!d) return; const s = d; d = null; cancelAnimationFrame(raf);
+    if (!s.on) return;
+    deckSuppress = true; setTimeout(() => { deckSuppress = false; }, 60);
+    let target = Math.round(s.pos ?? s.idx);
+    if (Math.abs(s.v) > .45 && target === s.idx) target = s.idx + (s.v < 0 ? 1 : -1);
+    deckGo(target);
+  };
+  document.addEventListener('pointerup', end);
+  document.addEventListener('pointercancel', end);
+})();
+
+/* ----- Main de cartes (animés) ----- */
+function handInfoHTML(w) {
+  if (!w) return `<div class="hand-hint"><span class="eyebrow">Visionnage en cours</span><p>Touche une carte pour la sortir de ta main.</p></div>`;
+  return `<div class="hand-det"><span class="eyebrow">Visionnage en cours</span>
+    <h2 class="deck-title" data-action="open" data-id="${w.id}">${esc(w.title)}</h2>
+    ${progressHTML(w, true)}
+    <div class="deck-ctrl"><button class="icon-btn" type="button" data-action="dec" data-id="${w.id}" aria-label="Retirer un épisode" ${w.current <= 0 ? 'disabled' : ''}>−</button>
+      <button class="icon-btn plus" type="button" data-action="inc" data-id="${w.id}" aria-label="Ajouter un épisode" ${w.total && w.current >= w.total ? 'disabled' : ''}>+</button>
+      <button class="btn sm" type="button" data-action="open" data-id="${w.id}">Ouvrir la fiche</button></div></div>`;
+}
+function handVars(i, n, sel) {
+  const mid = (n - 1) / 2, k = i - mid;
+  const si = sel < 0 ? -1 : sel;
+  const push = si < 0 || i === si ? 0 : (i < si ? -1 : 1);
+  return `--k:${k.toFixed(2)};--k2:${(k * k).toFixed(2)};--push:${push};--i:${i};z-index:${i === si ? 40 : 10 + i}`;
+}
+function handHTML() {
+  const list = handList();
+  if (!list.length) return `<section class="hand-wrap"><div class="sec-head"><h2>Ma main d'animés</h2></div>${emptyHTML('Aucun animé en cours', 'Passe un animé en « En cours » pour l\'ajouter à ta main.', false)}</section>`;
+  const sel = list.findIndex(w => w.id === state.handSel);
+  return `<section class="hand-wrap" aria-label="Animés en cours de visionnage"><div class="sec-head"><h2>Ma main d'animés <span class="n-soft">${list.length}</span></h2><a href="#animes-en-cours">Tous les animés en cours →</a></div>
+    <div class="hand-info">${handInfoHTML(sel >= 0 ? list[sel] : null)}</div>
+    <div class="hand${sel >= 0 ? ' has-up' : ''}" style="--n:${list.length}">
+      ${list.map((w, i) => `<button class="hand-card${i === sel ? ' up' : ''}" type="button" data-hand="${i}" data-id="${w.id}" aria-pressed="${i === sel}" aria-label="${esc(w.title)}, ${TYPES.anime.short} ${w.current} / ${w.total ?? '?'}" style="${handVars(i, list.length, sel)}">${coverHTML(w)}<span class="hand-ep">${TYPES.anime.short} ${w.current}${w.total ? '/' + w.total : ''}</span></button>`).join('')}
+    </div></section>`;
+}
+function handSelect(id) {
+  state.handSel = state.handSel === id ? null : id;
+  const list = handList(), sel = list.findIndex(w => w.id === state.handSel);
+  const hand = $('#main .hand'), info = $('#main .hand-info'); if (!hand) return;
+  hand.classList.toggle('has-up', sel >= 0);
+  hand.querySelectorAll('.hand-card').forEach(c => {
+    const i = +c.dataset.hand; c.classList.toggle('up', i === sel); c.setAttribute('aria-pressed', i === sel);
+    c.style.cssText = handVars(i, list.length, sel);
+  });
+  if (info) { info.innerHTML = handInfoHTML(sel >= 0 ? list[sel] : null); info.classList.remove('swap'); void info.offsetWidth; info.classList.add('swap'); }
+}
+
+/* ----- Clics ----- */
+document.addEventListener('click', e => { if (deckSuppress) { e.preventDefault(); e.stopImmediatePropagation(); deckSuppress = false; } }, true);
+document.addEventListener('click', e => {
+  const dc = e.target.closest('.deck-card');
+  if (dc) { const i = +dc.dataset.deck; if (i === deckIndex(deckList())) openDetail(dc.dataset.id, dc); else deckGo(i); return; }
+  const st = e.target.closest('[data-action="deck-step"]');
+  if (st) { deckGo(deckIndex(deckList()) + (+st.dataset.dir)); return; }
+  const hc = e.target.closest('.hand-card');
+  if (hc) { if (hc.classList.contains('up')) openDetail(hc.dataset.id, hc); else handSelect(hc.dataset.id); return; }
+  if (state.handSel && e.target.closest('.hand') ) handSelect(state.handSel);
+});
+document.addEventListener('keydown', e => {
+  if (e.target.classList && e.target.classList.contains('deck-stage') && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) { e.preventDefault(); deckGo(deckIndex(deckList()) + (e.key === 'ArrowRight' ? 1 : -1)); }
+});
 
 /* ---------- Démarrage ---------- */
 (async function boot() {
