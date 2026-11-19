@@ -2978,6 +2978,6 @@ document.addEventListener('keydown', e => {
   if (Storage.mode === 'memory') toast('Ce navigateur bloque le stockage : tes données ne seront pas conservées. Exporte-les avant de fermer.', 'error');
 })();
 </script>
-<script>if ('serviceWorker' in navigator && window.isSecureContext && /^https?:$/.test(location.protocol)) addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));</script>
+<script>if ('serviceWorker' in navigator && window.isSecureContext && /^https?:$/.test(location.protocol)) addEventListener('load', () => { const had = !!navigator.serviceWorker.controller; let done = false; navigator.serviceWorker.addEventListener('controllerchange', () => { if (had && !done) { done = true; location.reload(); } }); navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then(r => r.update()).catch(() => {}); });</script>
 </body>
 </html>

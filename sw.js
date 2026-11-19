@@ -1,12 +1,12 @@
 /* Anime Liste : fonctionnement hors ligne.
    L'app elle-même est servie depuis le cache (mise à jour en arrière-plan),
    les polices et couvertures sont gardées en cache, les API (AniList, Jikan) passent toujours par le réseau. */
-const VERSION = 'v4';
+const VERSION = 'v5';
 const SHELL = 'al-shell-' + VERSION, RUNTIME = 'al-runtime-' + VERSION;
 const SHELL_FILES = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(SHELL).then(c => c.addAll(SHELL_FILES)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(SHELL).then(c => c.addAll(SHELL_FILES.map(u => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== SHELL && k !== RUNTIME).map(k => caches.delete(k)))).then(() => self.clients.claim()));
@@ -29,7 +29,13 @@ self.addEventListener('fetch', e => {
       const cache = await caches.open(SHELL);
       const key = req.mode === 'navigate' ? './index.html' : req;
       const cached = await cache.match(key, { ignoreSearch: true });
-      const network = fetch(req).then(res => { if (res.ok) cache.put(key, res.clone()); return res; }).catch(() => null);
+      const network = fetch(req, { cache: 'no-cache' }).then(res => { if (res.ok) cache.put(key, res.clone()); return res; }).catch(() => null);
+      // Ouverture de l'app : version en ligne d'abord (3 s max), sinon la copie hors ligne
+      if (req.mode === 'navigate' && cached) {
+        const fresh = await Promise.race([network, new Promise(r => setTimeout(() => r(null), 3000))]);
+        if (fresh) return fresh;
+        e.waitUntil(network); return cached;
+      }
       if (cached) { e.waitUntil(network); return cached; }
       return (await network) || new Response('Hors ligne', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
     })());
