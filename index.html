@@ -470,6 +470,95 @@ textarea{resize:vertical;min-height:90px;width:100%}
   .d-hero{padding-top:34px}
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* ---------- Classement ---------- */
+.tl-ico{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,#ff5c7a,#ffb347);color:#1a0d12;font:800 12px/1 var(--display);flex:none}
+.tl-ico.lg{width:34px;height:34px;font-size:20px;border-radius:10px;vertical-align:-5px;margin-right:12px;box-shadow:0 8px 22px -8px #ff5c7a}
+.nav-link .ico .tl-ico{width:17px;height:17px;font-size:10.5px;border-radius:5px}
+.n-soft{font:600 13px var(--mono);color:var(--muted);margin-left:6px}
+.tbadge{font:700 10px/1 var(--body);letter-spacing:.06em;text-transform:uppercase;padding:3px 6px;border-radius:5px;background:rgba(139,92,246,.2);color:var(--violet-soft)}
+.tbadge.anime{background:rgba(47,123,255,.2);color:#8fb8ff}
+.podium{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:end;max-width:620px;width:100%;margin:6px auto 4px}
+.pod{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;min-width:0;animation:podUp .7s var(--spring) both;animation-delay:calc(var(--o,0) * 110ms)}
+.pod.p1{--mc:#ffd43b}.pod.p2{--mc:#d6dbe6}.pod.p3{--mc:#e7a56b}
+.pod-cover{width:74%;position:relative;transition:transform .5s var(--spring)}
+.pod.p1 .pod-cover{width:88%}
+.pod:hover .pod-cover{transform:translate3d(0,-5px,0) scale(1.03)}
+.pod:active .pod-cover{transform:scale(.97);transition-duration:.1s}
+.pod:focus-visible .pod-cover{outline:2px solid var(--violet);outline-offset:3px;border-radius:var(--r-sm)}
+.pod-cover .cover{box-shadow:0 22px 44px -18px var(--mc)}
+.pod-medal{margin-top:-24px;position:relative;z-index:1;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font:800 15px var(--display);color:#1a1205;background:var(--mc);box-shadow:0 0 0 4px var(--bg)}
+.pod b{font-size:14px;line-height:1.25;max-width:100%;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pod-score{font:700 16px var(--mono);color:var(--mc)}
+.pod-score small{font-size:11px;color:var(--muted)}
+.pod-step{width:100%;border-radius:12px 12px 4px 4px;border:1px solid var(--line);border-bottom:0;background:linear-gradient(180deg,rgba(139,92,246,.32),rgba(47,123,255,.04));transform-origin:bottom;animation:stepUp .8s var(--spring) both;animation-delay:calc(var(--o,0) * 110ms + 80ms)}
+.pod.p1 .pod-step{height:70px;background:linear-gradient(180deg,rgba(255,212,59,.3),rgba(139,92,246,.06))}
+.pod.p2 .pod-step{height:48px}.pod.p3 .pod-step{height:32px}
+@keyframes podUp{from{opacity:0;transform:translate3d(0,34px,0) scale(.88)}}
+@keyframes stepUp{from{transform:scaleY(0)}}
+.rank-list{display:flex;flex-direction:column;gap:8px}
+.rank-row{display:grid;grid-template-columns:40px 46px minmax(0,1fr) 150px;gap:12px;align-items:center;padding:8px 14px 8px 8px;border-radius:var(--r);background:var(--surface);border:1px solid var(--line);animation:fadeUp .45s var(--ease-out) both;animation-delay:calc(var(--i,0) * 28ms)}
+.rank-n{font:700 17px var(--mono);color:var(--muted);text-align:center}
+.rank-row .cover{border-radius:7px}.rank-row .cover > span{font-size:11px}
+.rank-body{min-width:0;display:flex;flex-direction:column;gap:3px}
+.rank-body b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.rank-body > span{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank-score{display:flex;align-items:center;gap:10px;font:500 12px var(--mono);color:var(--muted);justify-content:flex-end}
+.rank-score b{font:700 17px var(--mono);color:var(--text)}
+.rs-bar{flex:1;height:6px;border-radius:9px;background:var(--surface-3);overflow:hidden}
+.rs-bar i{display:block;height:100%;background:var(--grad);transform-origin:left;animation:barIn .9s var(--ease-out) both;animation-delay:calc(var(--i,0) * 28ms + 120ms)}
+@keyframes barIn{from{transform:scaleX(0)}}
+.rank-unrated{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:14px}
+.unr{display:flex;flex-direction:column;gap:6px;min-width:0;animation:fadeUp .4s var(--ease-out) both;animation-delay:calc(var(--i,0) * 22ms)}
+.unr b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.unr select{width:100%;padding:7px 10px;font-size:13px}
+@media (max-width:640px){.rank-row{grid-template-columns:26px 40px minmax(0,1fr) auto;gap:10px;padding-right:12px}.rs-bar{display:none}.podium{gap:8px}.pod b{font-size:12.5px}.rank-unrated{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}}
+
+/* ---------- Tier lists ---------- */
+body.on-tierlist #nowbar{display:none!important}
+.tl-bar{display:flex;gap:10px;align-items:center;justify-content:space-between}
+.tl-lists{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px;min-width:0}
+.tl-lists::-webkit-scrollbar{display:none}
+.tl-chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;font-weight:600;font-size:13.5px;color:var(--muted);white-space:nowrap;display:inline-flex;gap:8px;align-items:baseline;transition:transform .45s var(--spring),background .25s,border-color .25s,color .25s}
+.tl-chip small{font-size:11px;color:var(--faint);font-weight:500}
+.tl-chip:active{transform:scale(.94);transition-duration:.08s}
+.tl-chip.on{color:var(--text);border-color:var(--violet);background:linear-gradient(135deg,rgba(139,92,246,.32),rgba(47,123,255,.16))}
+.tl-board{display:flex;flex-direction:column;gap:6px}
+.tl-row{display:grid;grid-template-columns:92px minmax(0,1fr);gap:6px;animation:fadeUp .45s var(--ease-out) both;animation-delay:calc(var(--i,0) * 45ms)}
+.tl-label{background:var(--c);border-radius:12px;display:grid;place-items:center;padding:6px;color:#14101c;font:800 28px/1.05 var(--display);text-align:center;word-break:break-word;min-height:100px;transition:filter .2s,transform .4s var(--spring)}
+.tl-label.long{font-size:15px}
+.tl-drop{display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start;padding:6px;border-radius:12px;background:var(--surface);border:1px solid var(--line);min-height:100px;transition:background .2s,border-color .2s}
+.tl-drop.over{border-color:var(--violet);background:rgba(139,92,246,.1)}
+body.tl-picking .tl-drop,body.tl-picking .tl-label{cursor:pointer}
+body.tl-picking .tl-drop:hover{border-color:var(--cyan)}
+body.tl-picking .tl-label:hover{filter:brightness(1.12);transform:scale(1.03)}
+.tl-item{all:unset;box-sizing:border-box;width:60px;flex:none;border-radius:8px;cursor:grab;touch-action:manipulation;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;transition:transform .4s var(--spring),opacity .2s}
+.tl-item .cover{border-radius:8px}.tl-item .cover > span{font-size:12px;padding:2px}
+.tl-item img{pointer-events:none;-webkit-user-drag:none}
+.tl-item:hover{transform:translate3d(0,-3px,0)}
+.tl-item:focus-visible{outline:2px solid var(--violet);outline-offset:2px}
+.tl-item.sel{outline:2px solid var(--cyan);outline-offset:2px;transform:scale(1.08);box-shadow:0 10px 26px -10px var(--cyan)}
+.tl-item.dragging{opacity:.22}
+.tl-item[hidden]{display:none}
+.tl-ph{width:60px;aspect-ratio:2/3;border-radius:8px;border:2px dashed var(--violet);background:rgba(139,92,246,.14);flex:none;animation:pop .2s ease}
+.tl-ghost{position:fixed;z-index:200;pointer-events:none;margin:0;border-radius:8px;box-shadow:0 22px 44px -12px rgba(0,0,0,.85),0 0 0 2px var(--violet);will-change:transform}
+.tl-ghost .cover{border-radius:8px}
+body.tl-dragging,body.tl-dragging *{cursor:grabbing!important;-webkit-user-select:none;user-select:none}
+.tl-pool{min-height:84px}
+.tl-q{width:100%;max-width:340px}
+.tl-empty{color:var(--muted);font-size:13px;padding:8px}
+.tl-edit{display:flex;flex-direction:column;gap:10px;animation:fadeUp .35s var(--ease-out) both}
+.tl-erow{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:8px;align-items:center}
+.tl-erow.top{grid-template-columns:auto minmax(0,1fr) auto}
+.tl-erow.top label{font-weight:600;color:var(--muted);font-size:13px}
+.tl-ebtns{display:flex;gap:6px}
+.tl-ebtns .icon-btn{width:34px;height:34px;font-size:15px}
+.tl-ebtns .icon-btn:disabled{opacity:.35}
+.tl-erow input[type=color]{width:48px;height:38px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);padding:3px;cursor:pointer}
+.dlg.wide{max-width:760px}
+.tl-preview{width:100%;max-height:56vh;object-fit:contain;border-radius:12px;border:1px solid var(--line);background:#07070b}
+@media (max-width:640px){.tl-row{grid-template-columns:58px minmax(0,1fr)}.tl-label{font-size:20px;min-height:80px}.tl-label.long{font-size:12px}.tl-drop{min-height:80px;gap:5px;padding:5px}.tl-item,.tl-ph{width:46px}.tl-erow.top{grid-template-columns:1fr}.tl-erow.top label{display:none}}
+@media (prefers-reduced-motion:reduce){.pod,.pod-step,.rank-row,.rs-bar i,.unr,.tl-row,.tl-edit{animation:none}}
 </style>
 </head>
 <body>
@@ -738,7 +827,7 @@ async function deleteWork(id) {
 function parseRoute() {
   const h = decodeURIComponent(location.hash.replace(/^#/, ''));
   if (!h || h === 'accueil') return { view: 'dashboard' };
-  if (['favoris', 'historique', 'stats', 'donnees', 'calendrier'].includes(h)) return { view: h };
+  if (['favoris', 'historique', 'stats', 'donnees', 'calendrier', 'classement', 'tierlist'].includes(h)) return { view: h };
   if (h === 'bibliotheque') return { view: 'library', type: null, status: null };
   if (h === 'decouvrir') return { view: 'library', type: null, status: 'planned' };
   const m = h.match(/^(mangas|animes|tout)(?:-(.+))?$/);
@@ -852,6 +941,10 @@ function renderNav(route) {
       <a class="nav-link${act(route.view === 'favoris')}" href="#favoris"><span class="ico">♥</span>Favoris<span class="n">${state.works.filter(w => w.favorite).length}</span></a>
     </div>
     ${typeBlock('manga')}${typeBlock('anime')}
+    <div class="nav-group"><span class="eyebrow">Classements</span>
+      <a class="nav-link${act(route.view === 'classement')}" href="#classement"><span class="ico">★</span>Classement par notes<span class="n">${state.works.filter(w => w.rating).length}</span></a>
+      <a class="nav-link${act(route.view === 'tierlist')}" href="#tierlist"><span class="ico"><span class="tl-ico">S</span></span>Tier lists<span class="n">${tierState.lists.length}</span></a>
+    </div>
     <div class="nav-group"><span class="eyebrow">Suivi</span>
       <a class="nav-link${act(route.view === 'calendrier')}" href="#calendrier"><span class="ico">▤</span>Calendrier${newEps.length ? `<span class="n new" title="Nouveaux épisodes">${newEps.length}</span>` : ''}</a>
       <a class="nav-link${act(route.view === 'historique')}" href="#historique"><span class="ico">↺</span>Historique</a>
@@ -866,7 +959,7 @@ function renderNav(route) {
     <a href="#mangas"${on(isLib && route.type === 'manga')}><span class="ico">❒</span>Mangas</a>
     <button type="button" class="plus" data-action="add" aria-label="Ajouter une œuvre"><span class="ico">＋</span>Ajouter</button>
     <a href="#animes"${on(isLib && route.type === 'anime')}><span class="ico">▷</span>Animés</a>
-    <button type="button" data-action="menu"${on(['favoris', 'historique', 'stats', 'donnees', 'calendrier'].includes(route.view) || (isLib && !route.type))}><span class="ico">☰</span>Plus</button>`;
+    <button type="button" data-action="menu"${on(['favoris', 'historique', 'stats', 'donnees', 'calendrier', 'classement', 'tierlist'].includes(route.view) || (isLib && !route.type))}><span class="ico">☰</span>Plus</button>`;
 }
 const wide = () => matchMedia('(min-width:1100px)').matches;
 function isPinnedWide() { return document.body.classList.contains('nav-pinned') && wide(); }
@@ -1139,7 +1232,7 @@ function detailHTML(w, opts = {}) {
 function openDetail(id, srcEl) {
   const w = byId(id); if (!w) { toast('Cette œuvre n\'existe plus dans ta bibliothèque.', 'error'); return; }
   let src = null;
-  if (srcEl) { const box = srcEl.closest('.card, .poster, .resume, #nowbar, .card-cover'); src = box && box.querySelector('.cover'); }
+  if (srcEl) { const box = srcEl.closest('.card, .poster, .resume, #nowbar, .card-cover, .pod, .rank-row, .unr'); src = box && box.querySelector('.cover'); }
   const zoom = !!(src && !reducedMotion() && isVisible(src));
   state.openId = id; openSheet(detailHTML(w, { zoom }));
   setTint(w);
@@ -1353,7 +1446,7 @@ function pickResult(i) {
 }
 
 /* ---------- Import / export ---------- */
-function exportJSON() { return JSON.stringify({ app: 'anime-liste', version: 2, exportedAt: new Date().toISOString(), settings: { goals }, works: state.works, history: state.history }, null, 2); }
+function exportJSON() { return JSON.stringify({ app: 'anime-liste', version: 2, exportedAt: new Date().toISOString(), settings: { goals, tierlists: tierState.lists }, works: state.works, history: state.history }, null, 2); }
 function doExport() {
   const json = exportJSON(), name = `anime-liste-${new Date().toISOString().slice(0, 10)}.json`;
   try {
@@ -1394,6 +1487,7 @@ async function doImport() {
     const hm = new Map(state.history.map(h => [h.id, h])); history.forEach(h => hm.set(h.id, h)); state.history = [...hm.values()].sort((a, b) => b.at - a.at);
     await persist(async () => { await Storage.put('works', works); if (history.length) await Storage.put('history', history); });
   }
+  if (data.settings && Array.isArray(data.settings.tierlists)) importTiers(data.settings.tierlists, replace);
   $('#import-box').value = '';
   refresh(); scheduleSync(true, 300);
   const m = $('#import-msg'); if (m) m.innerHTML = `<div class="notice">${works.length} œuvre${works.length > 1 ? 's' : ''} importée${works.length > 1 ? 's' : ''}${skipped ? `, ${skipped} ignorée${skipped > 1 ? 's' : ''} (invalides)` : ''}.</div>`;
@@ -1579,6 +1673,7 @@ function flushComment() {
 function render() {
   const route = parseRoute();
   renderNav(route);
+  document.body.classList.toggle('on-tierlist', route.view === 'tierlist');
   let html;
   switch (route.view) {
     case 'library': html = viewLibrary(route); break;
@@ -1587,6 +1682,8 @@ function render() {
     case 'stats': html = viewStats(); break;
     case 'donnees': html = viewData(); break;
     case 'calendrier': html = viewCalendar(); break;
+    case 'classement': html = viewRanking(); break;
+    case 'tierlist': html = viewTierList(); break;
     default: html = viewDashboard();
   }
   const main = $('#main'), keepImport = route.view === 'donnees' && $('#import-box') ? $('#import-box').value : null;
@@ -2273,6 +2370,407 @@ $('#q-clear').addEventListener('click', () => { state.query = ''; $('#q').value 
 window.addEventListener('hashchange', () => { closeSheet(); render(); window.scrollTo(0, 0); });
 window.addEventListener('pagehide', flushComment);
 document.addEventListener('visibilitychange', () => { if (document.hidden) flushComment(); });
+
+/* ==========================================================
+   Classement par notes & tier lists
+   ========================================================== */
+function rankedList(type, genre) {
+  return state.works.filter(w => w.rating && (!type || w.type === type) && (!genre || (w.genres || []).includes(genre)))
+    .sort((a, b) => b.rating - a.rating || (b.favorite - a.favorite) || ((pct(b) ?? 0) - (pct(a) ?? 0)) || a.title.localeCompare(b.title, 'fr'));
+}
+function viewRanking() {
+  const type = state.rankType || null;
+  const base = state.works.filter(w => !type || w.type === type);
+  const genres = [...new Set(base.flatMap(w => w.genres || []))].sort((a, b) => a.localeCompare(b, 'fr'));
+  const g = genres.includes(state.rankGenre) ? state.rankGenre : '';
+  const list = rankedList(type, g);
+  const unrated = base.filter(w => !w.rating && (!g || (w.genres || []).includes(g)));
+  let rank = 0, prev = null;
+  const ranks = list.map((w, i) => { if (w.rating !== prev) { rank = i + 1; prev = w.rating; } return rank; });
+  const avg = list.length ? list.reduce((s, w) => s + w.rating, 0) / list.length : 0;
+  const seg = [[null, 'Tout'], ['manga', 'Mangas'], ['anime', 'Animés']].map(([t, l]) => `<button type="button" data-action="rank-type" data-type="${t || ''}" class="${type === t ? 'on' : ''}">${l}</button>`).join('');
+  const head = `<div class="page-head"><div><h1>Classement</h1><p>Tes œuvres triées selon ta note personnelle.${list.length ? ` ${list.length} notée${list.length > 1 ? 's' : ''}, moyenne ${fr1(avg)}/10.` : ''}</p></div>
+    <a class="btn" href="#tierlist"><span class="tl-ico">S</span>Tier lists</a></div>
+    <div class="tb-row"><div class="seg" role="group" aria-label="Type">${seg}</div>${genres.length ? `<select id="rank-genre" data-change="rank-genre" aria-label="Genre"><option value="">Tous les genres</option>${genres.map(x => `<option${x === g ? ' selected' : ''}>${esc(x)}</option>`).join('')}</select>` : ''}</div>`;
+  if (!state.works.length) return `<div class="view">${head}${emptyHTML('Ta bibliothèque est vide', 'Ajoute des œuvres et note-les pour voir ton classement.')}</div>`;
+  const pod = list.slice(0, 3);
+  const order = { 0: 2, 1: 1, 2: 0 };
+  const podHTML = pod.length ? `<div class="podium">${[1, 0, 2].filter(i => pod[i]).map(i => {
+    const w = pod[i];
+    return `<button class="pod p${i + 1}" type="button" data-action="open" data-id="${w.id}" style="--o:${order[i]}" aria-label="${ranks[i]}ᵉ : ${esc(w.title)}, ${w.rating}/10">
+      <span class="pod-cover">${coverHTML(w)}</span><span class="pod-medal">${ranks[i]}</span>
+      <b>${esc(w.title)}</b><span class="pod-score">★ ${w.rating}<small>/10</small></span><span class="pod-step"></span></button>`;
+  }).join('')}</div>` : `<div class="notice">Aucune œuvre notée${type ? ' dans ce type' : ''}${g ? ` en « ${esc(g)} »` : ''}. Note-les ci-dessous ou depuis leur fiche.</div>`;
+  const rows = list.slice(3).map((w, k) => {
+    const i = k + 3;
+    return `<div class="rank-row" style="--i:${Math.min(k, 14)}"><span class="rank-n">${ranks[i]}</span>
+      <button class="card-cover" type="button" data-action="open" data-id="${w.id}" aria-label="Ouvrir ${esc(w.title)}">${coverHTML(w)}</button>
+      <div class="rank-body"><b data-action="open" data-id="${w.id}" title="${esc(w.title)}">${esc(w.title)}</b>
+        <span><span class="tbadge ${w.type}">${TYPES[w.type].label}</span> ${statusName(w.status, w.type, false)}${w.genres && w.genres.length ? ' · ' + esc(w.genres.slice(0, 3).join(', ')) : ''}</span></div>
+      <span class="rank-score"><span class="rs-bar"><i style="transform:scaleX(${w.rating / 10})"></i></span><span><b>${w.rating}</b>/10</span></span></div>`;
+  }).join('');
+  const opts = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1].map(n => `<option value="${n}">${n}/10</option>`).join('');
+  const unr = unrated.length ? `<section class="sec"><div class="sec-head"><h2>Pas encore notées <span class="n-soft">${unrated.length}</span></h2></div>
+    <div class="rank-unrated">${unrated.slice(0, 60).map((w, i) => `<div class="unr" style="--i:${Math.min(i, 14)}"><button class="card-cover" type="button" data-action="open" data-id="${w.id}" aria-label="Ouvrir ${esc(w.title)}">${coverHTML(w)}</button>
+      <b title="${esc(w.title)}">${esc(w.title)}</b><select data-change="qrate" data-id="${w.id}" aria-label="Noter ${esc(w.title)}"><option value="">Noter…</option>${opts}</select></div>`).join('')}</div></section>` : '';
+  return `<div class="view">${head}${podHTML}${rows ? `<div class="rank-list">${rows}</div>` : ''}${unr}</div>`;
+}
+
+/* ---------- Tier lists : données ---------- */
+const TL_COLORS = ['#ff5c7a', '#ff9f43', '#ffd43b', '#5ee07a', '#4dabf7', '#a78bfa', '#f783ac', '#63e6be'];
+const tierState = { lists: [], cur: null };
+const tlId = () => 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+function newTierList(name, type) {
+  const t = Date.now();
+  return { id: tlId(), name, type: type || null, tiers: ['S', 'A', 'B', 'C', 'D'].map((l, i) => ({ id: tlId() + i, label: l, color: TL_COLORS[i], items: [] })), createdAt: t, updatedAt: t };
+}
+function normTierList(t) {
+  if (!t || typeof t !== 'object') return null;
+  const tiers = (Array.isArray(t.tiers) ? t.tiers : []).slice(0, 12).filter(r => r && typeof r === 'object').map((r, i) => ({
+    id: String(r.id || tlId() + i).slice(0, 40), label: String(r.label ?? '?').slice(0, 24),
+    color: /^#[0-9a-f]{6}$/i.test(r.color) ? r.color : TL_COLORS[i % TL_COLORS.length],
+    items: (Array.isArray(r.items) ? r.items : []).map(String).slice(0, 1000)
+  }));
+  if (!tiers.length) return null;
+  return { id: String(t.id || tlId()).slice(0, 40), name: String(t.name || 'Tier list').slice(0, 60), type: t.type === 'manga' || t.type === 'anime' ? t.type : null, tiers, createdAt: +t.createdAt || Date.now(), updatedAt: +t.updatedAt || Date.now() };
+}
+function loadTiers() {
+  try {
+    const d = JSON.parse(localStorage.getItem('al_tiers') || 'null');
+    if (d && Array.isArray(d.lists)) { tierState.lists = d.lists.map(normTierList).filter(Boolean); tierState.cur = d.cur || null; }
+  } catch (e) { }
+}
+function saveTiers(tl) {
+  if (tl) tl.updatedAt = Date.now();
+  try { localStorage.setItem('al_tiers', JSON.stringify({ lists: tierState.lists, cur: tierState.cur })); } catch (e) { toast('Stockage plein : exporte tes données.', 'error'); }
+  markSaved();
+}
+function importTiers(lists, replace) {
+  const norm = lists.map(normTierList).filter(Boolean);
+  if (replace) tierState.lists = norm;
+  else { const m = new Map(tierState.lists.map(t => [t.id, t])); norm.forEach(t => m.set(t.id, t)); tierState.lists = [...m.values()]; }
+  saveTiers();
+}
+loadTiers();
+function curTL() {
+  let t = tierState.lists.find(x => x.id === tierState.cur);
+  if (!t && tierState.lists.length) { t = tierState.lists[0]; tierState.cur = t.id; }
+  return t || null;
+}
+function tlCleanup(tl) {
+  const valid = new Set(state.works.filter(w => !tl.type || w.type === tl.type).map(w => w.id)), seen = new Set();
+  tl.tiers.forEach(r => { r.items = r.items.filter(id => valid.has(id) && !seen.has(id) && (seen.add(id), true)); });
+  return { valid, seen };
+}
+function tlPool(tl) {
+  const { seen } = tlCleanup(tl);
+  return state.works.filter(w => (!tl.type || w.type === tl.type) && !seen.has(w.id))
+    .sort((a, b) => (b.rating || 0) - (a.rating || 0) || a.title.localeCompare(b.title, 'fr'));
+}
+function tlMove(tl, id, to, index) {
+  tl.tiers.forEach(r => { r.items = r.items.filter(x => x !== id); });
+  if (to !== 'pool') { const r = tl.tiers.find(x => x.id === to); if (!r) return; const i = index == null ? r.items.length : Math.max(0, Math.min(index, r.items.length)); r.items.splice(i, 0, id); }
+  saveTiers(tl);
+}
+
+/* ---------- Tier lists : vue ---------- */
+function viewTierList() {
+  const tl = curTL();
+  const head = `<div class="page-head"><div><h1><span class="tl-ico lg">S</span>Tier lists</h1><p>Glisse tes couvertures dans les rangs. Sur téléphone : appui long puis glisse, ou touche une couverture puis un rang.</p></div>
+    <div class="d-actions">${tl ? '<button class="btn" type="button" data-action="tl-image">⤓ Image</button>' : ''}<button class="btn primary" type="button" data-action="tl-new">＋ Nouvelle</button></div></div>`;
+  if (!state.works.length) return `<div class="view">${head}${emptyHTML('Ta bibliothèque est vide', 'Ajoute des œuvres pour les classer dans une tier list.')}</div>`;
+  if (!tl) return `<div class="view">${head}<div class="empty"><strong>Aucune tier list</strong><span>Crée ta première tier list avec les rangs S, A, B, C et D. Tu pourras les renommer, les colorer et en ajouter.</span>
+    <div class="d-actions" style="justify-content:center"><button class="btn primary" type="button" data-action="tl-new" data-type="anime">Animés</button><button class="btn" type="button" data-action="tl-new" data-type="manga">Mangas</button><button class="btn" type="button" data-action="tl-new" data-type="">Tout mélangé</button></div></div></div>`;
+  const pool = tlPool(tl);
+  const item = w => `<button type="button" class="tl-item${state.tlSel === w.id ? ' sel' : ''}" data-tl-item="${w.id}" title="${esc(w.title)}${w.rating ? ` · ★ ${w.rating}/10` : ''}" aria-label="${esc(w.title)}">${coverHTML({ ...w, id: null })}</button>`;
+  const chips = tierState.lists.map(t => `<button type="button" class="tl-chip${t.id === tl.id ? ' on' : ''}" data-action="tl-switch" data-t="${t.id}">${esc(t.name)}<small>${t.type ? TYPES[t.type].plural : 'Tout'}</small></button>`).join('');
+  const rows = tl.tiers.map((r, i) => `<div class="tl-row" data-tier="${r.id}" style="--i:${i}">
+      <div class="tl-label${r.label.length > 2 ? ' long' : ''}" style="--c:${r.color}" data-tl-target="${r.id}">${esc(r.label) || '&nbsp;'}</div>
+      <div class="tl-drop" data-drop="${r.id}">${r.items.map(id => item(byId(id))).join('')}</div></div>`).join('');
+  const edit = state.tlEdit ? `<section class="panel tl-edit">
+      <div class="tl-erow top"><label for="tl-name">Nom</label><input class="input" id="tl-name" maxlength="60" value="${esc(tl.name)}" data-change="tl-name">
+        <div class="seg" role="group" aria-label="Contenu">${[['', 'Tout'], ['anime', 'Animés'], ['manga', 'Mangas']].map(([t, l]) => `<button type="button" data-action="tl-type" data-type="${t}" class="${(tl.type || '') === t ? 'on' : ''}">${l}</button>`).join('')}</div></div>
+      ${tl.tiers.map((r, i) => `<div class="tl-erow"><input type="color" value="${r.color}" data-change="tl-color" data-t="${r.id}" aria-label="Couleur du rang ${esc(r.label)}">
+        <input class="input" maxlength="24" value="${esc(r.label)}" data-change="tl-label" data-t="${r.id}" aria-label="Nom du rang">
+        <span class="tl-ebtns"><button class="icon-btn" type="button" data-action="tl-up" data-t="${r.id}" aria-label="Monter" ${i === 0 ? 'disabled' : ''}>↑</button><button class="icon-btn" type="button" data-action="tl-down" data-t="${r.id}" aria-label="Descendre" ${i === tl.tiers.length - 1 ? 'disabled' : ''}>↓</button><button class="icon-btn" type="button" data-action="tl-tdel" data-t="${r.id}" aria-label="Supprimer le rang" ${tl.tiers.length < 2 ? 'disabled' : ''}>✕</button></span></div>`).join('')}
+      <div class="d-actions"><button class="btn" type="button" data-action="tl-tadd" ${tl.tiers.length >= 12 ? 'disabled' : ''}>＋ Ajouter un rang</button><button class="btn danger" type="button" data-action="tl-del">Supprimer cette tier list</button><button class="btn primary" type="button" data-action="tl-edit">Terminé</button></div></section>` : '';
+  const rated = pool.some(w => w.rating);
+  return `<div class="view">${head}
+    <div class="tl-bar"><div class="tl-lists">${chips}</div>${state.tlEdit ? '' : '<button class="btn sm" type="button" data-action="tl-edit">✎ Personnaliser</button>'}</div>
+    ${edit}
+    <div class="tl-board">${rows}</div>
+    <section class="sec tl-pool-wrap"><div class="sec-head"><h2>Non classées <span class="n-soft">${pool.length}</span></h2><div class="sec-tools">
+      ${rated ? '<button class="btn sm" type="button" data-action="tl-auto">Placer selon mes notes</button>' : ''}<button class="btn sm ghost" type="button" data-action="tl-clear">Tout retirer</button></div></div>
+      ${pool.length > 12 ? `<input class="input tl-q" id="tl-q" type="search" placeholder="Filtrer les couvertures…" aria-label="Filtrer" value="${esc(state.tlQ || '')}">` : ''}
+      <div class="tl-drop tl-pool" data-drop="pool" data-tl-target="pool">${pool.map(item).join('') || '<span class="tl-empty">Tout est classé.</span>'}</div></section></div>`;
+}
+function tlApplyFilter() {
+  const q = (state.tlQ || '').trim().toLowerCase();
+  document.querySelectorAll('.tl-pool .tl-item').forEach(el => { const w = byId(el.dataset.tlItem); el.hidden = !!q && !!w && !w.title.toLowerCase().includes(q); });
+}
+function tlSelect(id) {
+  state.tlSel = state.tlSel === id ? null : id;
+  document.querySelectorAll('.tl-item').forEach(el => el.classList.toggle('sel', el.dataset.tlItem === state.tlSel));
+  document.body.classList.toggle('tl-picking', !!state.tlSel);
+}
+function tlRender(popId, from) {
+  render(); tlApplyFilter(); document.body.classList.toggle('tl-picking', !!state.tlSel);
+  if (!popId || reducedMotion()) return;
+  const el = document.querySelector(`.tl-item[data-tl-item="${popId}"]`); if (!el) return;
+  if (from) {
+    const r = el.getBoundingClientRect(), dx = from.left - r.left, dy = from.top - r.top, s = from.width / r.width;
+    el.animate([{ transform: `translate3d(${dx}px,${dy}px,0) scale(${s * 1.08}) rotate(-3deg)` }, { transform: 'none' }], { duration: 420, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+  } else el.animate([{ transform: 'scale(.6)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 380, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+}
+
+/* ---------- Glisser-déposer (souris, stylet et tactile) ---------- */
+let tlSuppressClick = false;
+(function tierDrag() {
+  let d = null, raf = 0;
+  const zoneAt = (x, y) => { const el = document.elementFromPoint(x, y); return el && el.closest('[data-drop]'); };
+  function start() {
+    const r = d.el.getBoundingClientRect();
+    d.rect = r; d.ox = d.x - r.left; d.oy = d.y - r.top; d.active = true;
+    const g = d.el.cloneNode(true); g.className = 'tl-ghost'; g.removeAttribute('data-tl-item');
+    g.style.cssText = `left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px`;
+    document.body.appendChild(g); d.ghost = g;
+    d.ph = document.createElement('span'); d.ph.className = 'tl-ph';
+    d.el.parentNode.insertBefore(d.ph, d.el); d.el.classList.add('dragging');
+    document.body.classList.add('tl-dragging');
+    if (navigator.vibrate) try { navigator.vibrate(12); } catch (e) { }
+    if (state.tlSel) tlSelect(state.tlSel);
+    place(); loop();
+  }
+  function place() {
+    if (!d || !d.active) return;
+    d.ghost.style.transform = `translate3d(${d.x - d.ox - d.rect.left}px,${d.y - d.oy - d.rect.top}px,0) scale(1.08) rotate(-3deg)`;
+    const z = zoneAt(d.x, d.y);
+    if (z !== d.zone) { if (d.zone) d.zone.classList.remove('over'); d.zone = z; if (z) z.classList.add('over'); }
+    if (!z) return;
+    const items = [...z.querySelectorAll('.tl-item')].filter(el => el !== d.el && !el.hidden);
+    let before = null;
+    for (const el of items) {
+      const r = el.getBoundingClientRect();
+      if (d.y < r.top || (d.y <= r.bottom && d.x < r.left + r.width / 2)) { before = el; break; }
+    }
+    if (before) { if (d.ph.nextSibling !== before || d.ph.parentNode !== z) z.insertBefore(d.ph, before); }
+    else if (d.ph.parentNode !== z || d.ph.nextElementSibling) { const empty = z.querySelector('.tl-empty'); z.insertBefore(d.ph, empty || null); }
+  }
+  function loop() {
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => {
+      if (!d || !d.active) return;
+      const edge = 80, h = innerHeight;
+      if (d.y < edge) window.scrollBy(0, -Math.ceil((edge - d.y) / 5));
+      else if (d.y > h - edge) window.scrollBy(0, Math.ceil((d.y - (h - edge)) / 5));
+      place(); loop();
+    });
+  }
+  function end(drop) {
+    if (!d) return;
+    clearTimeout(d.timer); cancelAnimationFrame(raf);
+    const s = d; d = null;
+    if (!s.active) return;
+    tlSuppressClick = true; setTimeout(() => { tlSuppressClick = false; }, 60);
+    document.body.classList.remove('tl-dragging');
+    if (s.zone) s.zone.classList.remove('over');
+    const from = s.ghost.getBoundingClientRect(); s.ghost.remove();
+    const tl = curTL();
+    if (drop && tl && s.zone && s.ph.parentNode === s.zone) {
+      let idx = 0;
+      for (const ch of s.zone.children) { if (ch === s.ph) break; if (ch.classList.contains('tl-item') && ch !== s.el) idx++; }
+      tlMove(tl, s.id, s.zone.dataset.drop, idx);
+      tlRender(s.id, from);
+    } else { s.ph.remove(); s.el.classList.remove('dragging'); }
+  }
+  document.addEventListener('pointerdown', e => {
+    const it = e.target.closest && e.target.closest('.tl-item');
+    if (!it || e.button > 0 || d) return;
+    d = { id: it.dataset.tlItem, el: it, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, active: false, touch: e.pointerType !== 'mouse' };
+    if (d.touch) d.timer = setTimeout(() => { if (d && !d.active) start(); }, 230);
+  });
+  document.addEventListener('pointermove', e => {
+    if (!d) return;
+    d.x = e.clientX; d.y = e.clientY;
+    const moved = Math.hypot(d.x - d.x0, d.y - d.y0);
+    if (!d.active) {
+      if (d.touch) { if (moved > 10) { clearTimeout(d.timer); d = null; } return; }
+      if (moved > 5) start(); else return;
+    }
+    e.preventDefault(); place();
+  }, { passive: false });
+  document.addEventListener('touchmove', e => { if (d && d.active) e.preventDefault(); }, { passive: false });
+  document.addEventListener('pointerup', () => end(true));
+  document.addEventListener('pointercancel', () => end(false));
+  document.addEventListener('dragstart', e => { if (e.target.closest && e.target.closest('.tl-item')) e.preventDefault(); });
+  document.addEventListener('contextmenu', e => { if (e.target.closest && e.target.closest('.tl-item')) e.preventDefault(); });
+  window.addEventListener('blur', () => end(false));
+})();
+
+/* ---------- Export en image ---------- */
+function loadImg(src) {
+  return new Promise(resolve => {
+    if (!src) return resolve(null);
+    const img = new Image(); let done = false;
+    const fin = v => { if (!done) { done = true; resolve(v); } };
+    if (!/^data:/.test(src)) img.crossOrigin = 'anonymous';
+    img.onload = () => fin(img); img.onerror = () => fin(null);
+    setTimeout(() => fin(null), 8000);
+    img.src = src;
+  });
+}
+async function coverForCanvas(w) {
+  const u = safeCover(w.cover); if (!u) return null;
+  let img = await loadImg(u);
+  if (!img && /^https?:/.test(u)) img = await loadImg(u + (u.includes('?') ? '&' : '?') + 'cors=1');
+  return img;
+}
+async function tierCanvas(tl) {
+  const S = 2, W = 1200, LBL = 130, PAD = 16, CW = 84, CH = 126, GAP = 8, HEAD = 96;
+  const css = getComputedStyle(document.documentElement);
+  const disp = css.getPropertyValue('--display').trim() || 'sans-serif', body = css.getPropertyValue('--body').trim() || 'sans-serif';
+  try { await document.fonts.ready; } catch (e) { }
+  const per = Math.floor((W - PAD * 2 - LBL - GAP * 2 + GAP) / (CW + GAP));
+  const heights = tl.tiers.map(r => Math.max(1, Math.ceil(r.items.length / per)) * (CH + GAP) + GAP);
+  const H = HEAD + heights.reduce((a, b) => a + b + 6, 0) + PAD + 30;
+  const all = tl.tiers.flatMap(r => r.items).map(byId).filter(Boolean);
+  const imgs = new Map(); let k = 0;
+  await Promise.all(Array.from({ length: Math.min(6, all.length) }, async () => { while (k < all.length) { const w = all[k++]; imgs.set(w.id, await coverForCanvas(w)); } }));
+  const c = document.createElement('canvas'); c.width = W * S; c.height = H * S;
+  const x = c.getContext('2d'); x.scale(S, S);
+  x.fillStyle = '#07070b'; x.fillRect(0, 0, W, H);
+  const g = x.createLinearGradient(0, 0, W, 0); g.addColorStop(0, '#8b5cf6'); g.addColorStop(.6, '#2f7bff'); g.addColorStop(1, '#3ad0ff');
+  x.fillStyle = g; x.fillRect(0, 0, W, 4);
+  x.fillStyle = '#ececf4'; x.font = `800 34px ${disp}`; x.textBaseline = 'alphabetic'; x.fillText(tl.name, PAD + 4, 52);
+  x.fillStyle = '#9a9ab0'; x.font = `500 15px ${body}`;
+  x.fillText(`${tl.type ? TYPES[tl.type].plural : 'Animés et mangas'} · ${all.length} œuvre${all.length > 1 ? 's' : ''} · ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`, PAD + 4, 78);
+  const rr = (X, Y, w, h, r) => { x.beginPath(); x.moveTo(X + r, Y); x.arcTo(X + w, Y, X + w, Y + h, r); x.arcTo(X + w, Y + h, X, Y + h, r); x.arcTo(X, Y + h, X, Y, r); x.arcTo(X, Y, X + w, Y, r); x.closePath(); };
+  let y = HEAD;
+  tl.tiers.forEach((r, i) => {
+    const h = heights[i];
+    x.fillStyle = r.color; rr(PAD, y, LBL, h, 12); x.fill();
+    x.fillStyle = '#14101c'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    let fs = r.label.length <= 2 ? 44 : r.label.length <= 5 ? 28 : 18;
+    x.font = `800 ${fs}px ${disp}`; while (fs > 11 && x.measureText(r.label).width > LBL - 16) { fs -= 2; x.font = `800 ${fs}px ${disp}`; }
+    x.fillText(r.label, PAD + LBL / 2, y + h / 2);
+    x.textAlign = 'left';
+    x.fillStyle = '#101017'; rr(PAD + LBL + GAP, y, W - PAD * 2 - LBL - GAP, h, 12); x.fill();
+    r.items.map(byId).filter(Boolean).forEach((w, j) => {
+      const cx = PAD + LBL + GAP * 2 + (j % per) * (CW + GAP), cy = y + GAP + Math.floor(j / per) * (CH + GAP);
+      x.save(); rr(cx, cy, CW, CH, 8); x.clip();
+      const img = imgs.get(w.id);
+      if (img && img.naturalWidth) {
+        const ir = img.naturalWidth / img.naturalHeight, tr = CW / CH;
+        let sw = img.naturalWidth, sh = img.naturalHeight, sx = 0, sy = 0;
+        if (ir > tr) { sw = sh * tr; sx = (img.naturalWidth - sw) / 2; } else { sh = sw / tr; sy = (img.naturalHeight - sh) / 2; }
+        x.drawImage(img, sx, sy, sw, sh, cx, cy, CW, CH);
+      } else {
+        const hh = hueOf(w.title), gg = x.createLinearGradient(cx, cy, cx + CW, cy + CH);
+        gg.addColorStop(0, `hsl(${hh} 60% 28%)`); gg.addColorStop(1, `hsl(${(hh + 50) % 360} 70% 14%)`);
+        x.fillStyle = gg; x.fillRect(cx, cy, CW, CH);
+        x.fillStyle = 'rgba(255,255,255,.9)'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = `800 20px ${disp}`;
+        x.fillText(initials(w.title), cx + CW / 2, cy + CH / 2 - 10);
+        x.font = `500 10px ${body}`; const t = w.title.length > 16 ? w.title.slice(0, 15) + '…' : w.title;
+        x.fillText(t, cx + CW / 2, cy + CH / 2 + 16); x.textAlign = 'left';
+      }
+      x.restore();
+    });
+    y += h + 6;
+  });
+  x.fillStyle = '#6b6b80'; x.font = `500 12px ${body}`; x.textAlign = 'right'; x.textBaseline = 'alphabetic';
+  x.fillText('Anime Liste', W - PAD, H - 12);
+  return c;
+}
+async function tierImage() {
+  const tl = curTL(); if (!tl) return;
+  if (!tl.tiers.some(r => r.items.length)) { toast('Place au moins une couverture avant de créer l\'image.', 'error'); return; }
+  toast('Création de l\'image…');
+  let blob;
+  try { const c = await tierCanvas(tl); blob = await new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(new Error('vide')), 'image/png')); }
+  catch (e) { toast('Impossible de créer l\'image : ' + e.message, 'error'); return; }
+  const url = URL.createObjectURL(blob), name = `tier-list-${tl.name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'anime'}.png`;
+  let file = null; try { file = new File([blob], name, { type: 'image/png' }); } catch (e) { }
+  const canShare = !!(file && navigator.canShare && navigator.canShare({ files: [file] }));
+  const d = $('#dialog'), prevFocus = document.activeElement;
+  d.innerHTML = `<div class="dlg wide" role="dialog" aria-modal="true" aria-labelledby="dlg-t"><h3 id="dlg-t">Image de « ${esc(tl.name)} »</h3>
+    <img class="tl-preview" src="${url}" alt="Aperçu de la tier list">
+    ${IN_CLAUDE ? '<p>Le téléchargement est bloqué dans la version ouverte sur claude.ai : utilise l\'appli installée, ou fais un clic droit (appui long) sur l\'image pour l\'enregistrer.</p>' : '<p>Les couvertures que leur site refuse de partager sont remplacées par leurs initiales.</p>'}
+    <div class="dlg-actions"><button class="btn ghost" type="button" data-r="0">Fermer</button>${canShare ? '<button class="btn" type="button" data-r="share">Partager</button>' : ''}<button class="btn primary" type="button" data-r="dl">Télécharger</button></div></div>`;
+  d.hidden = false;
+  const done = () => { d.hidden = true; d.innerHTML = ''; d.onclick = null; document.removeEventListener('keydown', key, true); setTimeout(() => URL.revokeObjectURL(url), 1000); prevFocus && document.contains(prevFocus) && prevFocus.focus({ preventScroll: true }); };
+  const key = e => { if (e.key === 'Escape') { e.stopPropagation(); done(); } };
+  d.onclick = async e => {
+    const b = e.target.closest('[data-r]');
+    if (!b) { if (e.target === d) done(); return; }
+    if (b.dataset.r === 'dl') { const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); toast(`« ${name} » téléchargée.`, 'ok'); }
+    else if (b.dataset.r === 'share') { try { await navigator.share({ files: [file], title: tl.name }); } catch (err) { } }
+    else done();
+  };
+  document.addEventListener('keydown', key, true);
+  d.querySelector('[data-r="dl"]').focus();
+}
+
+/* ---------- Actions ---------- */
+document.addEventListener('click', e => { if (tlSuppressClick) { e.preventDefault(); e.stopImmediatePropagation(); tlSuppressClick = false; } }, true);
+document.addEventListener('click', async e => {
+  const it = e.target.closest('.tl-item');
+  if (it) { tlSelect(it.dataset.tlItem); return; }
+  const tgt = e.target.closest('[data-tl-target], .tl-drop');
+  if (tgt && state.tlSel && !e.target.closest('[data-action]')) {
+    const tl = curTL(), id = state.tlSel, to = tgt.dataset.tlTarget || tgt.dataset.drop;
+    if (tl && to) { state.tlSel = null; tlMove(tl, id, to); tlRender(id); }
+    return;
+  }
+  const el = e.target.closest('[data-action]'); if (!el) return;
+  const a = el.dataset.action; if (!/^(rank|tl)-/.test(a)) return;
+  const tl = curTL(), tier = tl && el.dataset.t ? tl.tiers.find(r => r.id === el.dataset.t) : null;
+  switch (a) {
+    case 'rank-type': state.rankType = el.dataset.type || null; render(); break;
+    case 'tl-new': {
+      const type = el.dataset.type !== undefined ? (el.dataset.type || null) : (tl ? tl.type : 'anime');
+      const n = tierState.lists.length + 1;
+      const t = newTierList(type === 'anime' ? `Mes animés${n > 1 ? ' ' + n : ''}` : type === 'manga' ? `Mes mangas${n > 1 ? ' ' + n : ''}` : `Tier list ${n}`, type);
+      tierState.lists.push(t); tierState.cur = t.id; state.tlEdit = false; state.tlSel = null; saveTiers(t); render(); toast('Tier list créée. « Personnaliser » pour la renommer.', 'ok'); break;
+    }
+    case 'tl-switch': tierState.cur = el.dataset.t; state.tlSel = null; state.tlEdit = false; saveTiers(); state.lastKey = ''; tlRender(); break;
+    case 'tl-edit': state.tlEdit = !state.tlEdit; render(); break;
+    case 'tl-type': if (tl) { tl.type = el.dataset.type || null; saveTiers(tl); render(); } break;
+    case 'tl-tadd': if (tl && tl.tiers.length < 12) { const i = tl.tiers.length; tl.tiers.push({ id: tlId(), label: ['E', 'F', 'G', 'H'][i - 5] || String(i + 1), color: TL_COLORS[i % TL_COLORS.length], items: [] }); saveTiers(tl); render(); } break;
+    case 'tl-tdel': if (tl && tier && tl.tiers.length > 1) {
+      if (tier.items.length && !await confirmDialog({ title: `Supprimer le rang « ${tier.label} » ?`, text: `Ses ${tier.items.length} couverture${tier.items.length > 1 ? 's' : ''} retourneront dans « Non classées ».`, ok: 'Supprimer', danger: true })) break;
+      tl.tiers = tl.tiers.filter(r => r !== tier); saveTiers(tl); render();
+    } break;
+    case 'tl-up': case 'tl-down': if (tl && tier) { const i = tl.tiers.indexOf(tier), j = i + (a === 'tl-up' ? -1 : 1); if (j >= 0 && j < tl.tiers.length) { [tl.tiers[i], tl.tiers[j]] = [tl.tiers[j], tl.tiers[i]]; saveTiers(tl); render(); } } break;
+    case 'tl-del': if (tl) {
+      if (!await confirmDialog({ title: `Supprimer « ${tl.name} » ?`, text: 'Cette tier list sera supprimée. Tes œuvres et leurs notes ne changent pas.', ok: 'Supprimer', danger: true })) break;
+      tierState.lists = tierState.lists.filter(t => t !== tl); tierState.cur = null; state.tlEdit = false; saveTiers(); render(); toast('Tier list supprimée.', 'ok');
+    } break;
+    case 'tl-auto': if (tl) {
+      const n = tl.tiers.length; let c = 0;
+      tlPool(tl).filter(w => w.rating).forEach(w => { const i = Math.min(n - 1, Math.floor((10 - w.rating) * n / 10)); tl.tiers[i].items.push(w.id); c++; });
+      saveTiers(tl); tlRender(); toast(`${c} œuvre${c > 1 ? 's' : ''} placée${c > 1 ? 's' : ''} selon ta note.`, 'ok');
+    } break;
+    case 'tl-clear': if (tl && tl.tiers.some(r => r.items.length)) {
+      if (!await confirmDialog({ title: 'Tout retirer ?', text: 'Toutes les couvertures retournent dans « Non classées ». Les rangs sont conservés.', ok: 'Tout retirer' })) break;
+      tl.tiers.forEach(r => { r.items = []; }); saveTiers(tl); tlRender();
+    } break;
+    case 'tl-image': tierImage(); break;
+  }
+});
+document.addEventListener('change', async e => {
+  const el = e.target, c = el.dataset && el.dataset.change; if (!c) return;
+  const tl = curTL(), tier = tl && el.dataset.t ? tl.tiers.find(r => r.id === el.dataset.t) : null;
+  if (c === 'rank-genre') { state.rankGenre = el.value; render(); }
+  else if (c === 'qrate') { const w = byId(el.dataset.id); if (!w || !el.value) return; w.rating = +el.value; await saveWork(w); refresh(); toast(`« ${w.title} » noté ${w.rating}/10.`, 'ok'); }
+  else if (c === 'tl-name' && tl) { tl.name = el.value.trim().slice(0, 60) || tl.name; saveTiers(tl); render(); }
+  else if (c === 'tl-label' && tier) { tier.label = el.value.trim().slice(0, 24); saveTiers(tl); render(); }
+  else if (c === 'tl-color' && tier && /^#[0-9a-f]{6}$/i.test(el.value)) { tier.color = el.value; saveTiers(tl); render(); }
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'tl-q') { state.tlQ = e.target.value; tlApplyFilter(); }
+  else if (e.target.dataset && e.target.dataset.change === 'tl-color') { const r = document.querySelector(`.tl-row[data-tier="${e.target.dataset.t}"] .tl-label`); if (r) r.style.setProperty('--c', e.target.value); }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.tlSel && $('#dialog').hidden) tlSelect(state.tlSel); });
 
 /* ---------- Démarrage ---------- */
 (async function boot() {
