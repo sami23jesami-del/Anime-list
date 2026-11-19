@@ -282,6 +282,44 @@ body.has-nowbar #toasts{bottom:calc(100px + env(safe-area-inset-bottom,0px))}
   .goal-grid{grid-template-columns:minmax(0,1fr)}
 }
 
+/* ---------- Calendrier global ---------- */
+.cal-tabs{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(118px,1fr);gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px}
+.cal-tabs::-webkit-scrollbar{display:none}
+.cal-tab{border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;align-items:flex-start;gap:2px;color:var(--muted);transition:transform .45s var(--spring),background .25s,border-color .25s,color .25s}
+.cal-tab b{font:600 14px var(--body);color:var(--text);text-transform:capitalize}
+.cal-tab span{font:500 11.5px var(--mono)}
+.cal-tab:hover{transform:translateY(-2px)}
+.cal-tab:active{transform:scale(.95);transition-duration:.08s}
+.cal-tab.on{background:linear-gradient(135deg,rgba(139,92,246,.35),rgba(47,123,255,.22));border-color:var(--violet);color:var(--text)}
+.air-list{display:flex;flex-direction:column;gap:8px}
+.air-list.from-right .air-row{animation:slideL .42s var(--ease-out) both;animation-delay:calc(var(--i,0) * 22ms)}
+.air-list.from-left .air-row{animation:slideR .42s var(--ease-out) both;animation-delay:calc(var(--i,0) * 22ms)}
+.air-list.fade .air-row{animation:fadeUp .35s var(--ease-out) both;animation-delay:calc(var(--i,0) * 18ms)}
+@keyframes slideL{from{opacity:0;transform:translate3d(36px,0,0)}}
+@keyframes slideR{from{opacity:0;transform:translate3d(-36px,0,0)}}
+.air-row{display:grid;grid-template-columns:62px 52px minmax(0,1fr) auto;gap:14px;align-items:center;padding:10px 12px;border-radius:var(--r);background:var(--surface);border:1px solid var(--line)}
+.air-row.mine{border-color:rgba(139,92,246,.55);background:linear-gradient(90deg,rgba(139,92,246,.12),var(--surface) 55%)}
+.air-row.past{opacity:.6}
+.air-time{font:700 15px var(--mono);color:var(--cyan);display:flex;flex-direction:column;line-height:1.2}
+.air-time small{font:500 10.5px var(--body);color:var(--faint)}
+.air-cover .cover{border-radius:8px}
+.air-cover .cover > span{font-size:12px;padding:2px}
+.air-info{display:flex;flex-direction:column;gap:3px;min-width:0}
+.air-info b{font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.air-info span{font-size:12.5px;color:var(--muted)}
+.skel{display:block;border-radius:6px;background:linear-gradient(90deg,var(--surface-2) 0%,var(--surface-3) 50%,var(--surface-2) 100%);background-size:200% 100%;animation:shimmer 1.2s linear infinite}
+@keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+.latest{font-size:13px;color:var(--muted)}
+.latest b{color:var(--text);font-weight:600}
+/* relief 3D des couvertures */
+.card-cover.tilt{transform:perspective(800px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateY(-4px) scale(1.04);transition:transform .14s ease-out,box-shadow .3s ease;box-shadow:0 26px 50px -20px rgba(139,92,246,.7)}
+.card-cover.tilt::after{content:"";position:absolute;inset:0;border-radius:var(--r-sm);background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgba(255,255,255,.24),transparent 55%);pointer-events:none;z-index:3}
+@media (max-width:560px){
+  .air-row{grid-template-columns:50px 42px minmax(0,1fr);gap:10px;padding:10px}
+  .air-row > .btn{grid-column:2/-1;justify-self:start}
+  .cal-tabs{grid-auto-columns:104px}
+}
+
 /* ---------- Library toolbar ---------- */
 .toolbar{display:flex;flex-direction:column;gap:12px}
 .tb-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -532,6 +570,8 @@ function normalizeWork(o) {
     createdAt, updatedAt: Number(o.updatedAt) > 0 ? Number(o.updatedAt) : createdAt,
     malId: toInt(o.malId) || null,
     alId: toInt(o.alId) || null,
+    mdId: typeof o.mdId === 'string' && /^[0-9a-f-]{36}$/i.test(o.mdId) ? o.mdId : null,
+    latest: normLatest(o.latest),
     link: normLink(o.link)
   };
 }
@@ -1062,6 +1102,7 @@ function detailHTML(w, opts = {}) {
           <div class="d-count"><span class="eyebrow">${t.unit} actuel</span></div>
           <div class="d-count"><span class="mono" data-wid="${w.id}">${w.current} / ${w.total ?? '?'}</span><span class="pct">${p === null ? 'total inconnu' : fr1(p) + ' %'}</span></div>
           <div class="bar lg ${p === 100 ? 'done' : ''}" data-wid="${w.id}"><i style="transform:scaleX(${(p ?? 0) / 100})"></i></div>
+          ${latestHTML(w)}
           <div class="d-controls">
             <button class="icon-btn" type="button" data-action="dec" data-id="${w.id}" aria-label="Retirer un ${t.unit.toLowerCase()}" ${w.current <= 0 ? 'disabled' : ''}>−</button>
             <input class="input" id="d-current" type="number" inputmode="numeric" min="0" ${w.total ? `max="${w.total}"` : ''} value="${w.current}" aria-label="${t.unit} actuel" data-id="${w.id}">
@@ -1262,7 +1303,7 @@ async function apiSearch(q) {
   if (apiCtrl) apiCtrl.abort();
   apiCtrl = new AbortController(); const ctrl = apiCtrl;
   const type = form.type, key = type + '|' + norm(q);
-  out.innerHTML = '<div class="notice">Recherche en cours…</div>';
+  out.innerHTML = `<div class="results" aria-busy="true">${[...Array(6)].map(() => '<div class="result" style="cursor:default"><span class="skel" style="aspect-ratio:2/3;border-radius:9px"></span><span class="skel" style="height:12px;width:80%"></span><span class="skel" style="height:10px;width:50%"></span></div>').join('')}</div>`;
   let results = apiCache.get(key) || null, lastErr = null, timedOut = false;
   try {
     if (!results) for (const src of [fetchAniList, fetchJikan]) {
@@ -1552,7 +1593,7 @@ function render() {
   const key = location.hash + '|' + (route.view === 'favoris' ? state.favType : '');
   const entering = key !== state.lastKey; state.lastKey = key;
   main.innerHTML = html;
-  if (entering && main.firstElementChild) main.firstElementChild.classList.add('enter');
+  if (entering && main.firstElementChild) { main.firstElementChild.classList.add('enter'); countUp(main); }
   if (keepImport) $('#import-box').value = keepImport;
   renderNowbar();
 }
@@ -1595,7 +1636,7 @@ async function alQuery(query, variables, ms = 8000) {
     return j.data;
   } finally { clearTimeout(t); }
 }
-const MEDIA_FIELDS = 'id idMal type status episodes chapters duration nextAiringEpisode{episode airingAt} airingSchedule(notYetAired:true,perPage:8){nodes{episode airingAt}} relations{edges{relationType(version:2) node{id idMal type title{romaji english}}}}';
+const MEDIA_FIELDS = 'id idMal type status title{romaji english} episodes chapters duration nextAiringEpisode{episode airingAt} airingSchedule(notYetAired:true,perPage:8){nodes{episode airingAt}} relations{edges{relationType(version:2) node{id idMal type title{romaji english}}}}';
 const REC_FIELDS = 'id idMal type title{romaji english} coverImage{extraLarge large} description(asHtml:false) genres startDate{year} episodes chapters';
 function alToForm(m) {
   const type = m.type === 'MANGA' ? 'manga' : 'anime';
@@ -1609,7 +1650,7 @@ async function syncAniList(force) {
   if (IN_CLAUDE) { AL.status = 'blocked'; return; }
   if (AL.status === 'loading') { scheduleSync(force, 2000); return; }
   const fresh = Date.now() - AL.at < 3 * 3600e3 && state.works.every(w => !w.alId || AL.media[w.alId]) && !state.works.some(w => !w.alId && w.malId);
-  if (!force && fresh) return;
+  if (!force && fresh) { setTimeout(refreshLatest, 50); return; }
   AL.status = 'loading'; AL.msg = '';
   try {
     // 1. relier automatiquement les œuvres qui ont un identifiant MyAnimeList
@@ -1648,6 +1689,7 @@ async function syncAniList(force) {
       recs = [...score.values()].sort((a, b) => b.s - a.s).slice(0, 24).map(x => ({ ...alToForm(x.m), because: x.from.slice(0, 2) }));
     }
     AL.recs = recs; AL.at = Date.now(); AL.status = 'ok'; saveALCache();
+    setTimeout(refreshLatest, 50);
   } catch (e) {
     AL.status = 'error';
     AL.msg = e.name === 'AbortError' ? 'AniList ne répond pas pour le moment.' : e instanceof TypeError ? 'Connexion à AniList impossible (hors ligne ou bloqueur de publicités ?).' : e.message;
@@ -1666,16 +1708,16 @@ function airedEp(m) {
 function seenMap() { try { return JSON.parse(localStorage.getItem('al_seen') || '{}'); } catch (e) { return {}; } }
 function newEpisodes() {
   const seen = seenMap();
-  return state.works.filter(w => w.type === 'anime' && w.status === 'current' && w.alId && AL.media[w.alId])
-    .map(w => ({ w, aired: airedEp(AL.media[w.alId]) }))
-    .filter(x => x.aired !== null && x.aired > x.w.current && seen[x.w.id] !== x.aired);
+  return state.works.filter(w => w.status === 'current')
+    .map(w => ({ w, aired: w.type === 'anime' ? (w.alId && AL.media[w.alId] ? airedEp(AL.media[w.alId]) : null) : (w.latest ? w.latest.n : null) }))
+    .filter(x => x.aired !== null && x.aired !== undefined && x.aired > x.w.current && seen[x.w.id] !== x.aired);
 }
 function alertsHTML() {
   const list = newEpisodes(); if (!list.length) return '';
-  return `<section class="panel alert-panel"><h3><span class="pulse-dot" aria-hidden="true"></span>Nouveaux épisodes disponibles</h3><div class="hist">${list.map(({ w, aired }) => {
-    const late = aired - w.current;
-    return `<div class="hist-item"><span class="w"><b data-action="open" data-id="${w.id}">${esc(w.title)}</b> · ép. ${aired} sorti${late > 1 ? ` · ${late} épisodes à rattraper` : ''} · tu es à l'ép. ${w.current}</span>
-      <button class="btn sm primary" type="button" data-action="inc" data-id="${w.id}">Ép. ${w.current + 1} vu ✓</button><button class="btn sm ghost" type="button" data-action="al-dismiss" data-id="${w.id}" data-v="${aired}">Ignorer</button></div>`;
+  return `<section class="panel alert-panel"><h3><span class="pulse-dot" aria-hidden="true"></span>Nouveautés disponibles</h3><div class="hist">${list.map(({ w, aired }) => {
+    const late = aired - w.current, an = w.type === 'anime';
+    return `<div class="hist-item"><span class="w"><span class="badge ${w.type}">${TYPES[w.type].label}</span> <b data-action="open" data-id="${w.id}">${esc(w.title)}</b> · ${an ? `ép. ${aired} sorti` : `ch. ${aired} paru`}${late > 1 ? ` · ${late} ${an ? 'épisodes' : 'chapitres'} à rattraper` : ''} · tu es ${an ? "à l'ép." : 'au ch.'} ${w.current}</span>
+      <button class="btn sm primary" type="button" data-action="inc" data-id="${w.id}">${an ? 'Ép.' : 'Ch.'} ${w.current + 1} ${an ? 'vu' : 'lu'} ✓</button><button class="btn sm ghost" type="button" data-action="al-dismiss" data-id="${w.id}" data-v="${aired}">Ignorer</button></div>`;
   }).join('')}</div></section>`;
 }
 function recShelfHTML() {
@@ -1690,7 +1732,7 @@ function openFormPrefilled(d) { if (!d) return; openForm(); apiResults = [d]; pi
 
 /* ---------- Calendrier ---------- */
 function fmtDay(t) { return new Date(t).toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: '2-digit' }); }
-function viewCalendar() {
+function viewCalendarMine() {
   const animes = state.works.filter(w => w.type === 'anime' && ['current', 'planned', 'paused'].includes(w.status));
   const unlinked = animes.filter(w => !w.alId).length;
   const items = [];
@@ -1912,7 +1954,7 @@ function backupPanelHTML() {
     <p style="margin:0;color:var(--muted)">${IN_CLAUDE ? 'Indisponible dans la version ouverte sur claude.ai.' : Storage.mode !== 'idb' ? 'Indisponible : le stockage de ce navigateur est limité.' : 'Ton navigateur ne permet pas d\'écrire automatiquement dans un fichier. Il faut Chrome ou Edge sur ordinateur. Sur téléphone, utilise l\'export ci-dessous.'}</p>
     <p style="margin:0;color:var(--muted)">Tu peux quand même exporter ta sauvegarde et la ranger dans Google Drive, OneDrive ou iCloud.</p></section>`;
   const st = FileBackup.state;
-  const status = st === 'on' ? `<span class="dot"></span>Active dans « ${esc(FileBackup.name)} »${FileBackup.last ? `, dernière copie ${relTime(FileBackup.last)}` : ''}.`
+  const status = st === 'on' ? `<span class="dot"></span>Active dans « ${esc(FileBackup.name || (FileBackup.handle && FileBackup.handle.name) || "")} »${FileBackup.last ? `, dernière copie ${relTime(FileBackup.last)}` : ''}.`
     : st === 'paused' ? `<span class="dot warn"></span>En pause : par sécurité, le navigateur redemande ta permission après chaque redémarrage.`
       : st === 'error' ? `<span class="dot warn"></span>Échec de l'écriture : ${esc(FileBackup.err)}`
         : 'Inactive. Choisis un fichier : l\'app le mettra à jour toute seule à chaque modification.';
@@ -1976,6 +2018,181 @@ document.addEventListener('change', async e => {
   }
 });
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { scheduleSync(false, 500); if (parseRoute().view === 'dashboard' && !state.openId) refresh(); } });
+
+/* =========================================================
+   Calendrier global : tous les animés diffusés, jour par jour (AniList)
+   ========================================================= */
+const SCHED = { items: [], from: 0, to: 0, at: 0, status: 'idle', msg: '' };
+try { const c = JSON.parse(localStorage.getItem('al_sched') || 'null'); if (c && Array.isArray(c.items)) Object.assign(SCHED, c, { status: 'idle' }); } catch (e) { }
+function dayStart(offset = 0) { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + offset); return d; }
+async function loadSchedule(force) {
+  if (IN_CLAUDE) { SCHED.status = 'blocked'; return; }
+  const from = Math.floor(dayStart(0).getTime() / 1000), to = Math.floor(dayStart(7).getTime() / 1000);
+  if (SCHED.status === 'loading') return;
+  if (!force && SCHED.from <= from && SCHED.to >= to && Date.now() - SCHED.at < 6 * 3600e3) return;
+  SCHED.status = 'loading'; SCHED.msg = '';
+  if (parseRoute().view === 'calendrier') refresh();
+  try {
+    const all = [];
+    for (let page = 1; page <= 15; page++) {
+      const d = await alQuery('query($p:Int,$a:Int,$b:Int){Page(page:$p,perPage:50){pageInfo{hasNextPage} airingSchedules(airingAt_greater:$a,airingAt_lesser:$b,sort:TIME){episode airingAt media{id idMal title{romaji english} coverImage{large} episodes format isAdult popularity}}}}', { p: page, a: from - 1, b: to }, 10000);
+      (d.Page?.airingSchedules || []).forEach(s => { if (s.media && !s.media.isAdult) all.push({ ep: s.episode, t: s.airingAt * 1000, m: { id: s.media.id, idMal: s.media.idMal, title: s.media.title?.romaji || s.media.title?.english || 'Sans titre', cover: s.media.coverImage?.large || '', episodes: s.media.episodes || null, format: s.media.format || '', pop: s.media.popularity || 0 } }); });
+      if (!d.Page?.pageInfo?.hasNextPage) break;
+    }
+    Object.assign(SCHED, { items: all, from, to, at: Date.now(), status: 'ok' });
+    try { localStorage.setItem('al_sched', JSON.stringify({ items: all, from, to, at: SCHED.at })); } catch (e) { }
+  } catch (e) {
+    SCHED.status = 'error';
+    SCHED.msg = e.name === 'AbortError' ? 'AniList ne répond pas pour le moment.' : e instanceof TypeError ? 'Connexion à AniList impossible (hors ligne ou bloqueur de publicités ?).' : e.message;
+  }
+  if (parseRoute().view === 'calendrier') refresh();
+}
+function libFor(m) { return state.works.find(w => w.type === 'anime' && (w.alId === m.id || (m.idMal && w.malId === m.idMal) || norm(w.title) === norm(m.title))); }
+const FORMAT_FR = { TV: 'Série TV', TV_SHORT: 'Format court', ONA: 'Web', OVA: 'OAV', MOVIE: 'Film', SPECIAL: 'Spécial' };
+function viewCalendar() {
+  setTimeout(() => loadSchedule(false), 0);
+  const sel = Math.min(6, Math.max(0, state.calDay || 0)), filt = state.calFilter || 'all';
+  const anim = state.calAnim || ''; state.calAnim = '';
+  const inDay = (i, x) => x.t >= dayStart(i).getTime() && x.t < dayStart(i + 1).getTime();
+  const keep = x => filt === 'all' || !!libFor(x.m);
+  const tabs = [...Array(7)].map((_, i) => {
+    const d = dayStart(i), n = SCHED.items.filter(x => inDay(i, x) && keep(x)).length;
+    const label = i === 0 ? "Aujourd'hui" : i === 1 ? 'Demain' : d.toLocaleDateString('fr-FR', { weekday: 'long' });
+    return `<button type="button" class="cal-tab${i === sel ? ' on' : ''}" data-action="cal-day" data-d="${i}" role="tab" aria-selected="${i === sel}"><b>${label}</b><span>${d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}${SCHED.items.length ? ` · ${n}` : ''}</span></button>`;
+  }).join('');
+  const list = SCHED.items.filter(x => inDay(sel, x) && keep(x)).sort((a, b) => a.t - b.t || b.m.pop - a.m.pop);
+  const mineCount = SCHED.items.filter(x => inDay(sel, x) && libFor(x.m)).length;
+  let body;
+  if (IN_CLAUDE) body = '<div class="notice err">Le calendrier a besoin d\'AniList, bloqué dans la version ouverte sur claude.ai. Utilise l\'appli installée ou le fichier téléchargé.</div>';
+  else if (!SCHED.items.length && (SCHED.status === 'loading' || SCHED.status === 'idle')) body = `<div class="air-list">${[...Array(6)].map(() => '<div class="air-row"><span class="skel" style="width:44px;height:14px"></span><span class="skel" style="width:52px;aspect-ratio:2/3;border-radius:8px"></span><div class="air-info"><span class="skel" style="width:60%;height:14px"></span><span class="skel" style="width:30%;height:12px"></span></div></div>').join('')}</div>`;
+  else if (!list.length) body = emptyHTML(filt === 'mine' ? 'Aucun de tes animés ne sort ce jour-là' : 'Aucune diffusion trouvée ce jour-là', filt === 'mine' ? 'Passe sur « Tous les animés » pour voir toutes les sorties.' : 'Essaie un autre jour.', false);
+  else body = `<div class="air-list ${anim}">${list.map((x, i) => {
+    const w = libFor(x.m), past = x.t < Date.now();
+    return `<div class="air-row${past ? ' past' : ''}${w ? ' mine' : ''}" style="--i:${Math.min(i, 12)}">
+      <span class="air-time">${new Date(x.t).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}${past ? '<small>sorti</small>' : ''}</span>
+      <span class="air-cover">${coverHTML({ title: x.m.title, cover: x.m.cover })}</span>
+      <div class="air-info"><b title="${esc(x.m.title)}">${esc(x.m.title)}</b><span>Épisode ${x.ep}${x.m.episodes ? ' / ' + x.m.episodes : ''}${FORMAT_FR[x.m.format] ? ' · ' + FORMAT_FR[x.m.format] : ''}${w ? ` · tu es à l'ép. ${w.current}` : ''}</span></div>
+      ${w ? `<button class="btn sm" type="button" data-action="open" data-id="${w.id}"><span class="pill st-${w.status}" style="border:0;padding:0">${statusName(w.status, 'anime', false)}</span></button>`
+        : `<button class="btn sm primary" type="button" data-action="al-add" data-al="${x.m.id}" aria-label="Ajouter ${esc(x.m.title)}">＋ Ajouter</button>`}
+    </div>`;
+  }).join('')}</div>`;
+  const status = SCHED.status === 'error' ? `<div class="notice err">${esc(SCHED.msg)}${SCHED.items.length ? ' Affichage de la dernière version enregistrée.' : ''}</div>` : '';
+  return `<div class="view">
+    <div class="page-head"><div><h1>Calendrier de diffusion</h1><p>Tous les épisodes d'animés diffusés cette semaine, à l'heure de ton appareil (source : AniList).${SCHED.at ? ` Mis à jour ${relTime(SCHED.at)}.` : ''}</p></div>
+      <button class="btn" type="button" data-action="cal-reload" ${IN_CLAUDE || SCHED.status === 'loading' ? 'disabled' : ''}>${SCHED.status === 'loading' ? 'Mise à jour…' : '⟳ Actualiser'}</button></div>
+    <div class="cal-tabs" role="tablist" aria-label="Jour">${tabs}</div>
+    <div class="tb-row"><div class="seg" role="group" aria-label="Filtre"><button type="button" data-action="cal-filter" data-f="all" class="${filt === 'all' ? 'on' : ''}">Tous les animés</button><button type="button" data-action="cal-filter" data-f="mine" class="${filt === 'mine' ? 'on' : ''}">Ma bibliothèque${mineCount ? ` (${mineCount})` : ''}</button></div></div>
+    ${status}${body}
+  </div>`;
+}
+
+/* =========================================================
+   Dernier épisode / dernier chapitre paru, mis à jour automatiquement
+   ========================================================= */
+function normLatest(l) { if (!l || typeof l !== 'object') return null; const n = toInt(l.n), at = Number(l.at) || 0; return { n: n >= 0 ? n : null, src: String(l.src || '').slice(0, 30), at, miss: !!l.miss }; }
+const MD = 'https://api.mangadex.org';
+async function mdFetch(path, ms = 7000) {
+  const c = new AbortController(); const t = setTimeout(() => c.abort(), ms);
+  try { const r = await fetch(MD + path, { signal: c.signal }); if (!r.ok) throw new Error('MangaDex ' + r.status); return await r.json(); }
+  finally { clearTimeout(t); }
+}
+async function mdLatest(w, altTitles) {
+  let id = w.mdId;
+  if (!id) {
+    const titles = [w.title, ...(altTitles || [])].filter(Boolean);
+    for (const title of titles.slice(0, 2)) {
+      const j = await mdFetch(`/manga?title=${encodeURIComponent(title)}&limit=10&contentRating[]=safe&contentRating[]=suggestive`);
+      const list = j.data || [];
+      const hit = list.find(d => (w.alId && d.attributes?.links?.al === String(w.alId)) || (w.malId && d.attributes?.links?.mal === String(w.malId)))
+        || list.find(d => { const a = d.attributes || {}; const names = [...Object.values(a.title || {}), ...(a.altTitles || []).flatMap(o => Object.values(o))]; return names.some(n => norm(n) === norm(w.title)); });
+      if (hit) { id = hit.id; break; }
+      await new Promise(r => setTimeout(r, 250));
+    }
+    if (!id) return null;
+  }
+  const agg = await mdFetch(`/manga/${id}/aggregate`);
+  let max = null;
+  Object.values(agg.volumes || {}).forEach(v => Object.keys(v.chapters || {}).forEach(k => { const n = parseFloat(k); if (Number.isFinite(n)) max = Math.max(max ?? 0, n); }));
+  return { id, ch: max === null ? null : Math.floor(max) };
+}
+let latestRunning = false;
+async function refreshLatest() {
+  if (IN_CLAUDE || latestRunning) return;
+  latestRunning = true;
+  const changed = new Set(); const now = Date.now();
+  try {
+    // Animés et totaux : depuis les données AniList déjà chargées
+    state.works.forEach(w => {
+      const m = w.alId && AL.media[w.alId]; if (!m) return;
+      const tot = w.type === 'anime' ? m.episodes : m.chapters;
+      if (tot && !w.total && tot >= w.current) { w.total = tot; changed.add(w); }
+      if (w.type === 'anime') { const a = airedEp(m); if (a !== null && (!w.latest || w.latest.n !== a)) { w.latest = { n: a, src: 'AniList', at: now }; changed.add(w); } }
+      if (w.type === 'manga' && m.status === 'FINISHED' && m.chapters && (!w.latest || w.latest.n !== m.chapters)) { w.latest = { n: m.chapters, src: 'AniList', at: now }; changed.add(w); }
+    });
+    // Mangas en cours de parution : dernier chapitre via MangaDex (toutes les 6 h au plus)
+    const todo = state.works.filter(w => w.type === 'manga' && !['completed', 'dropped'].includes(w.status) && !(w.alId && AL.media[w.alId] && AL.media[w.alId].status === 'FINISHED') && (!w.latest || now - w.latest.at > 6 * 3600e3)).slice(0, 25);
+    for (const w of todo) {
+      try {
+        const m = w.alId && AL.media[w.alId];
+        const res = await mdLatest(w, m && m.title ? [m.title.romaji, m.title.english] : []);
+        if (res && res.ch !== null) { w.mdId = res.id; w.latest = { n: res.ch, src: 'MangaDex', at: now }; }
+        else w.latest = { n: w.latest ? w.latest.n : null, src: w.latest ? w.latest.src : '', at: now, miss: true };
+        changed.add(w);
+      } catch (e) { AL.mdMsg = 'MangaDex injoignable pour le moment.'; break; }
+      await new Promise(r => setTimeout(r, 300));
+    }
+  } finally { latestRunning = false; }
+  if (changed.size) { await persist(() => Storage.put('works', [...changed])); const v = parseRoute().view; if (v === 'dashboard' || state.openId) refresh(); }
+}
+function latestHTML(w) {
+  const l = w.latest, unit = w.type === 'anime' ? 'Dernier épisode sorti' : 'Dernier chapitre paru';
+  if (!l || l.n === null) {
+    if (w.type === 'manga' && l && l.miss) return `<span class="latest">${unit} : introuvable automatiquement (manga absent de MangaDex)</span>`;
+    return w.alId || w.type === 'manga' ? `<span class="latest">${unit} : vérification au prochain lancement</span>` : '';
+  }
+  const late = l.n - w.current;
+  return `<span class="latest"><b>${unit} : ${l.n}</b>${late > 0 ? ` · <span style="color:var(--cyan)">${late} de retard</span>` : late === 0 ? ' · <span style="color:var(--good)">à jour</span>' : ''} · source ${esc(l.src)}, vérifié ${relTime(l.at)}</span>`;
+}
+
+/* =========================================================
+   Animations : relief 3D des couvertures, chiffres animés
+   ========================================================= */
+(function tilt() {
+  let fine = false; try { fine = matchMedia('(hover: hover) and (pointer: fine)').matches; } catch (e) { }
+  if (!fine) return;
+  let cur = null, raf = 0;
+  const clear = () => { if (cur) { cur.classList.remove('tilt'); cur.style.removeProperty('--rx'); cur.style.removeProperty('--ry'); } cur = null; };
+  document.addEventListener('pointermove', e => {
+    if (reducedMotion()) return;
+    const c = e.target.closest && e.target.closest('.card-cover');
+    if (c !== cur) { clear(); cur = c; if (c) c.classList.add('tilt'); }
+    if (!c) return;
+    const r = c.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => { c.style.setProperty('--rx', (-y * 12).toFixed(2) + 'deg'); c.style.setProperty('--ry', (x * 14).toFixed(2) + 'deg'); c.style.setProperty('--gx', ((x + .5) * 100).toFixed(1) + '%'); c.style.setProperty('--gy', ((y + .5) * 100).toFixed(1) + '%'); });
+  }, { passive: true });
+  document.addEventListener('pointerleave', clear); window.addEventListener('blur', clear); document.addEventListener('scroll', clear, { passive: true });
+})();
+function countUp(root) {
+  if (reducedMotion()) return;
+  root.querySelectorAll('.tile .v, .gprog .big, .streak-n').forEach(el => {
+    const txt = el.textContent.trim(); const m = txt.match(/^([\d\s  ]+(?:,\d+)?)(.*)$/); if (!m) return;
+    const target = parseFloat(m[1].replace(/[\s  ]/g, '').replace(',', '.')); if (!(target > 0)) return;
+    const dec = m[1].includes(',') ? 1 : 0, suffix = m[2], t0 = performance.now(), dur = 900;
+    const fmt = v => (dec ? v.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : Math.round(v).toLocaleString('fr-FR')) + suffix;
+    el.textContent = fmt(0);
+    (function step(now) { const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = fmt(target * e); if (k < 1) requestAnimationFrame(step); else el.textContent = txt; })(t0);
+  });
+}
+
+/* ---------- Actions ---------- */
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-action]'); if (!el) return;
+  const a = el.dataset.action;
+  if (a === 'cal-day') { const d = +el.dataset.d, prev = state.calDay || 0; if (d === prev) return; state.calAnim = d > prev ? 'from-right' : 'from-left'; state.calDay = d; refresh(); const t = $('.cal-tab.on'); t && t.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reducedMotion() ? 'auto' : 'smooth' }); }
+  else if (a === 'cal-filter') { state.calFilter = el.dataset.f; state.calAnim = 'fade'; refresh(); }
+  else if (a === 'cal-reload') { loadSchedule(true); scheduleSync(true, 0); }
+});
 
 /* ---------- Événements ---------- */
 document.addEventListener('click', async e => {
