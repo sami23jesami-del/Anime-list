@@ -1,0 +1,23 @@
+{
+  "name": "Anime Liste",
+  "short_name": "Anime Liste",
+  "description": "Suivi personnel d'animés et de mangas : progression, calendrier, objectifs.",
+  "lang": "fr",
+  "start_url": "./#accueil",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#07070b",
+  "theme_color": "#07070b",
+  "categories": ["entertainment", "books", "lifestyle"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Calendrier", "url": "./#calendrier" },
+    { "name": "Mangas en cours", "url": "./#mangas-en-cours" },
+    { "name": "Animés en cours", "url": "./#animes-en-cours" }
+  ]
+}
