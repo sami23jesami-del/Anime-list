@@ -623,6 +623,56 @@ body.tl-dragging,body.tl-dragging *{cursor:grabbing!important;-webkit-user-selec
 .sheet > *:not(.d-bg):not(.sheet-close):not(.grab){position:relative;z-index:1}
 @media (max-width:760px){.d-bg{height:min(460px,72vh)}.d-bg.cover-mode .d-bg-img{max-width:80%;right:0}}
 @media (prefers-reduced-motion:reduce){.d-bg.on .d-bg-img,.d-bg.on .d-bg-sweep,.d-bg-dust i{animation:none}.d-bg-dust{display:none}}
+
+/* ---------- Accueil vivant ---------- */
+.home-glow{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:0;transition:opacity .8s ease}
+.home-glow.show{opacity:1}
+.home-glow i{position:absolute;left:0;top:0;width:12.5%;height:12.5%;transform:scale(8);transform-origin:0 0;opacity:0;transition:opacity 1.2s ease;will-change:opacity,transform}
+body.glow-on::after{opacity:0}
+body::after{transition:opacity .8s ease}
+.home-glow i.on{opacity:1}
+.greet h1{font:800 clamp(26px,3.4vw,40px)/1.15 var(--display);margin:0;display:flex;flex-wrap:wrap;align-items:center;gap:0 .3em}
+.greet-w{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.greet p{margin:6px 0 0;color:var(--muted);font-size:15px}
+.greet p b{color:var(--text)}
+.greet-name{all:unset;cursor:pointer;border-bottom:2px dashed transparent;transition:border-color .2s}
+.greet-name:hover,.greet-name:focus-visible{border-color:var(--violet)}
+.greet-add{all:unset;cursor:pointer;font:600 13px var(--body);color:var(--violet-soft);border:1px dashed var(--line);border-radius:999px;padding:5px 12px;transition:border-color .2s,transform .4s var(--spring)}
+.greet-add:hover{border-color:var(--violet);transform:translateY(-1px)}
+.greet-input{font:700 22px var(--display);width:min(260px,70vw);padding:6px 12px}
+.today-row{display:grid;grid-auto-flow:column;grid-auto-columns:150px;gap:14px;overflow-x:auto;padding:4px 2px 8px;scrollbar-width:thin}
+.today-card{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:6px;min-width:0}
+.today-card b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.today-ep{font:600 12px var(--mono);color:var(--muted)}
+.today-card.is-new .today-ep{color:var(--cyan)}
+.today-card.soon .cover{opacity:.72}
+.today-card:focus-visible .card-cover{outline:2px solid var(--violet);outline-offset:3px}
+.new-badge{position:absolute;top:8px;right:8px;z-index:2;background:var(--grad);color:#fff;font:800 10px/1 var(--body);letter-spacing:.08em;text-transform:uppercase;padding:5px 8px;border-radius:999px;box-shadow:0 6px 18px -6px var(--violet);animation:newPulse 2.4s ease-in-out infinite}
+@keyframes newPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}
+.view.enter .today-card{animation:fadeUp .5s var(--ease-out) backwards;animation-delay:calc(var(--i,0) * 50ms + 120ms)}
+.rings{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.ring{position:relative;display:grid;grid-template-columns:72px minmax(0,1fr);grid-template-rows:auto auto;column-gap:14px;align-items:center;align-content:center;background:rgba(16,16,23,.82);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;transition:transform .5s var(--spring),border-color .2s}
+.ring:hover{transform:translateY(-3px);border-color:rgba(139,92,246,.5)}
+.ring svg{grid-row:1 / span 2;width:72px;height:72px;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:7}
+.ring-bg{stroke:var(--surface-3)}
+.ring-fg{stroke:var(--violet);stroke-linecap:round;transition:stroke-dashoffset 1.5s cubic-bezier(.2,.8,.2,1)}
+.r-a .ring-fg{stroke:var(--blue)}.r-d .ring-fg{stroke:#34d399}.r-g .ring-fg{stroke:var(--cyan)}
+.reveal:not(.in) .ring-fg{stroke-dashoffset:var(--len)!important}
+.ring-v{position:absolute;left:16px;top:50%;width:72px;height:72px;margin-top:-36px;display:flex;align-items:center;justify-content:center;gap:1px;font:700 17px/1 var(--mono)}
+.ring-v small{font-size:10px;color:var(--muted)}
+.ring-l{font-weight:700;align-self:end}
+.ring-s{font-size:12.5px;color:var(--muted);align-self:start}
+.roll{display:inline-flex;vertical-align:top}
+.roll-col{display:inline-block;height:1.1em;overflow:hidden}
+.roll-strip{display:block;white-space:pre;line-height:1.1em;animation:roll 1.15s cubic-bezier(.2,.8,.2,1) backwards}
+.roll-strip{transform:translate3d(0,calc(var(--n) * -1.1em),0)}
+@keyframes roll{from{transform:translate3d(0,0,0)}}
+.ring-v .roll-col,.ring-v .roll-strip{height:1em;line-height:1em}
+.ring-v .roll-strip{transform:translate3d(0,calc(var(--n) * -1em),0)}
+.reveal{opacity:0;transform:translate3d(0,30px,0);transition:opacity .7s ease,transform .85s var(--spring)}
+.reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none}.new-badge{animation:none}}
 </style>
 </head>
 <body>
@@ -1070,8 +1120,11 @@ function viewDashboard() {
   const latest = [...W].sort((a, b) => b.createdAt - a.createdAt).slice(0, 12);
   const statusPanel = type => `<div class="panel"><h3><span class="badge ${type}">${TYPES[type].label}</span> ${TYPES[type].plural} par catégorie</h3>
     <div class="status-list">${STATUSES.map(st => `<a href="#${libHash(type, st)}"><b class="st-${st}">${countOf(type, st)}</b><span>${statusName(st, type)}</span></a>`).join('')}</div></div>`;
+  const rel = todayReleases(); state.todayN = rel.length;
   return `<div class="view">
+    ${greetHTML(rel)}
     ${deckHTML()}
+    ${todayHTML(rel)}
     <section class="hero">
       <div><span class="eyebrow">Tableau de bord</span><h1>${resM.length + resA.length ? `${resM.length + resA.length} œuvre${resM.length + resA.length > 1 ? 's' : ''} en cours` : 'Rien en cours pour le moment'}</h1>
         <p>${frInt(chapters)} chapitres lus et ${frInt(episodes)} épisodes regardés au total. ${countOf(null, 'planned')} œuvre${countOf(null, 'planned') > 1 ? 's' : ''} à découvrir.</p>
@@ -1088,6 +1141,7 @@ function viewDashboard() {
       <a class="tile" style="--i:4" href="#stats"><span class="l">Chapitres lus</span><span class="v">${frInt(chapters)}</span><span class="s">tous mangas confondus</span></a>
       <a class="tile" style="--i:5" href="#stats"><span class="l">Épisodes regardés</span><span class="v">${frInt(episodes)}</span><span class="s">tous animés confondus</span></a>
     </section>
+    ${ringsHTML()}
     ${goalsHTML()}
     ${shelfHTML('En cours', [...W].filter(w => w.status === 'current').sort(recentSort), 'tout-en-cours')}
     ${shelfHTML('À voir', [...W].filter(w => w.status === 'planned').sort((a, b) => b.createdAt - a.createdAt), 'decouvrir')}
@@ -1753,7 +1807,8 @@ function render() {
   const key = location.hash + '|' + (route.view === 'favoris' ? state.favType : '');
   const entering = key !== state.lastKey; state.lastKey = key;
   main.innerHTML = html;
-  if (entering && main.firstElementChild) { main.firstElementChild.classList.add('enter'); countUp(main); }
+  if (entering && main.firstElementChild) { main.firstElementChild.classList.add('enter'); countUp(main); if (route.view === 'dashboard') homeEnter(main); }
+  if (route.view !== 'dashboard' && Glow.el) glowShow(false);
   if (keepImport) $('#import-box').value = keepImport;
   renderNowbar();
 }
@@ -2335,7 +2390,7 @@ function latestHTML(w) {
 })();
 function countUp(root) {
   if (reducedMotion()) return;
-  root.querySelectorAll('.tile .v, .gprog .big, .streak-n').forEach(el => {
+  root.querySelectorAll(root.querySelector('.rings') ? '.gprog .big, .streak-n' : '.tile .v, .gprog .big, .streak-n').forEach(el => {
     const txt = el.textContent.trim(); const m = txt.match(/^([\d\s  ]+(?:,\d+)?)(.*)$/); if (!m) return;
     const target = parseFloat(m[1].replace(/[\s  ]/g, '').replace(',', '.')); if (!(target > 0)) return;
     const dec = m[1].includes(',') ? 1 : 0, suffix = m[2], t0 = performance.now(), dur = 900;
@@ -3046,6 +3101,159 @@ function swapSheet(html) {
   cur.className = next.className;
   while (next.firstChild) cur.appendChild(next.firstChild);
 }
+
+/* ==========================================================
+   Accueil vivant : salutation, sorties du jour, fond qui suit
+   les couvertures, anneaux, chiffres qui défilent, cascade
+   ========================================================== */
+let userName = ''; try { userName = (localStorage.getItem('al_name') || '').slice(0, 30); } catch (e) { }
+function greetWord(h = new Date().getHours()) { return h < 5 ? 'Bonne nuit' : h < 12 ? 'Bonjour' : h < 18 ? 'Bon après-midi' : 'Bonsoir'; }
+
+/* ----- Sorties du jour ----- */
+function todayReleases() {
+  const a = dayStart(0).getTime(), b = dayStart(1).getTime(), out = new Map();
+  (SCHED.items || []).forEach(x => {
+    if (x.t < a || x.t >= b) return;
+    const w = libFor(x.m); if (!w || w.status === 'dropped' || w.status === 'completed') return;
+    out.set(w.id + ':' + x.ep, { w, ep: x.ep, t: x.t });
+  });
+  state.works.forEach(w => {
+    const m = w.type === 'anime' && w.alId && AL.media[w.alId]; if (!m || w.status === 'dropped' || w.status === 'completed') return;
+    const list = [...(m.airingSchedule && m.airingSchedule.nodes || []), ...(m.nextAiringEpisode ? [m.nextAiringEpisode] : [])];
+    list.forEach(n => { const t = n.airingAt * 1000; if (t >= a && t < b && !out.has(w.id + ':' + n.episode)) out.set(w.id + ':' + n.episode, { w, ep: n.episode, t }); });
+  });
+  return [...out.values()].sort((x, y) => x.t - y.t);
+}
+function todayHTML(list) {
+  const now = Date.now();
+  if (!list.length) return '';
+  const hm = t => new Date(t).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  return `<section class="sec today-sec"><div class="sec-head"><h2>Sorties du jour <span class="n-soft">${list.length}</span></h2><a href="#calendrier">Calendrier complet →</a></div>
+    <div class="today-row">${list.map((x, i) => {
+      const out = x.t <= now, isNew = out && x.ep > x.w.current;
+      return `<button class="today-card${isNew ? ' is-new' : ''}${out ? '' : ' soon'}" type="button" data-action="open" data-id="${x.w.id}" style="--i:${i}" aria-label="${esc(x.w.title)}, épisode ${x.ep}${out ? ' sorti' : ' à ' + hm(x.t)}">
+        <span class="card-cover">${coverHTML(x.w)}${isNew ? '<span class="new-badge">Nouveau</span>' : ''}</span>
+        <b>${esc(x.w.title)}</b><span class="today-ep">Ép. ${x.ep} · ${out ? (isNew ? 'sorti' : 'vu') : 'à ' + hm(x.t)}</span></button>`;
+    }).join('')}</div></section>`;
+}
+
+/* ----- Salutation + résumé ----- */
+function greetHTML(rel) {
+  const now = Date.now();
+  const newToday = rel.filter(x => x.t <= now && x.ep > x.w.current).length, later = rel.filter(x => x.t > now).length;
+  const ne = newEpisodes().length, p = weekProgress(), st = streak();
+  const bits = [];
+  if (newToday) bits.push(`<b>${newToday} nouvel${newToday > 1 ? 's' : ''} épisode${newToday > 1 ? 's' : ''}</b> sorti${newToday > 1 ? 's' : ''} aujourd'hui`);
+  else if (ne) bits.push(`<b>${ne} nouveauté${ne > 1 ? 's' : ''}</b> à rattraper`);
+  if (later) bits.push(`${later} autre${later > 1 ? 's' : ''} plus tard dans la journée`);
+  if (p.ch || p.ep) bits.push(`${p.ch ? `${p.ch} chapitre${p.ch > 1 ? 's' : ''}` : ''}${p.ch && p.ep ? ' et ' : ''}${p.ep ? `${p.ep} épisode${p.ep > 1 ? 's' : ''}` : ''} cette semaine`);
+  if (st.cur > 1) bits.push(`série de ${st.cur} jours 🔥`);
+  const line = bits.length ? bits.join(' · ') + '.' : 'Rien de neuf pour l\'instant : bonne lecture et bon visionnage !';
+  const nameHTML = state.nameEdit
+    ? `<input class="input greet-input" id="greet-name" maxlength="30" placeholder="Ton prénom" value="${esc(userName)}" data-change="greet-name" aria-label="Ton prénom">`
+    : userName ? `<button type="button" class="greet-name" data-action="greet-edit" title="Changer de prénom">${esc(userName)}</button>` : '';
+  return `<section class="greet"><h1><span class="greet-w">${greetWord()}</span>${userName || state.nameEdit ? ' ' : ''}${nameHTML}${!userName && !state.nameEdit ? ' <button type="button" class="greet-add" data-action="greet-edit">+ ton prénom</button>' : ''}</h1><p>${line}</p></section>`;
+}
+
+/* ----- Anneaux de progression ----- */
+function ringHTML(pctv, label, sub, cls = '') {
+  const r = 30, c = 2 * Math.PI * r, v = Math.max(0, Math.min(100, pctv || 0));
+  return `<div class="ring ${cls}"><svg viewBox="0 0 72 72" aria-hidden="true"><circle class="ring-bg" cx="36" cy="36" r="${r}"/><circle class="ring-fg" cx="36" cy="36" r="${r}" style="--len:${c.toFixed(1)};stroke-dasharray:${c.toFixed(1)};stroke-dashoffset:${(c * (1 - v / 100)).toFixed(1)}"/></svg>
+    <span class="ring-v">${Math.round(v)}<small>%</small></span><span class="ring-l">${label}</span><span class="ring-s">${sub}</span></div>`;
+}
+function ringsHTML() {
+  const by = type => { const L = state.works.filter(w => w.type === type && w.total && w.status !== 'dropped'); const c = L.reduce((s, w) => s + Math.min(w.current, w.total), 0), t = L.reduce((s, w) => s + w.total, 0); return { p: t ? c / t * 100 : 0, n: L.length }; };
+  const M = by('manga'), A = by('anime');
+  const done = state.works.filter(w => w.status === 'completed').length, all = state.works.filter(w => w.status !== 'planned').length;
+  const wp = weekProgress(), gT = (goals.ch || 0) + (goals.ep || 0), gV = Math.min(wp.ch, goals.ch || 0) + Math.min(wp.ep, goals.ep || 0);
+  return `<section class="rings">
+    ${ringHTML(M.p, 'Mangas', `${M.n} au total connu`, 'r-m')}
+    ${ringHTML(A.p, 'Animés', `${A.n} au total connu`, 'r-a')}
+    ${ringHTML(all ? done / all * 100 : 0, 'Terminés', `${done} sur ${all} commencés`, 'r-d')}
+    ${gT ? ringHTML(gV / gT * 100, 'Objectif semaine', `${wp.ch + wp.ep} / ${gT}`, 'r-g') : ''}
+  </section>`;
+}
+
+/* ----- Chiffres qui défilent (compteur mécanique) ----- */
+function rollNumbers(root) {
+  if (reducedMotion()) return;
+  root.querySelectorAll('.tile .v, .ring-v').forEach((el, k) => {
+    const node = el.firstChild; if (!node || node.nodeType !== 3) return;
+    const txt = node.textContent; if (!/\d/.test(txt)) return;
+    const wrap = document.createElement('span'); wrap.className = 'roll'; wrap.setAttribute('aria-label', txt);
+    let di = 0;
+    [...txt].forEach(ch => {
+      if (!/\d/.test(ch)) { const s = document.createElement('span'); s.className = 'roll-sep'; s.textContent = ch; wrap.appendChild(s); return; }
+      const col = document.createElement('span'); col.className = 'roll-col'; col.setAttribute('aria-hidden', 'true');
+      const strip = document.createElement('span'); strip.className = 'roll-strip';
+      strip.textContent = [...'0123456789', ...'0123456789'.slice(0, +ch + 1)].join('\n');
+      strip.style.setProperty('--n', 10 + (+ch)); strip.style.animationDelay = `${(k * 60 + di * 70)}ms`;
+      col.appendChild(strip); wrap.appendChild(col); di++;
+    });
+    node.replaceWith(wrap);
+    setTimeout(() => { if (wrap.isConnected) wrap.replaceWith(document.createTextNode(txt)); }, 1600 + k * 60 + di * 70);
+  });
+}
+
+/* ----- Entrée en cascade au chargement et au défilement ----- */
+let revealIO = null;
+function setupReveal(main) {
+  if (revealIO) { revealIO.disconnect(); revealIO = null; }
+  if (reducedMotion() || !('IntersectionObserver' in window)) return;
+  const secs = [...main.querySelectorAll('.view > section, .view > .notice')];
+  let batch = 0, timer = 0;
+  revealIO = new IntersectionObserver(es => {
+    es.forEach(en => {
+      if (!en.isIntersecting) return;
+      const el = en.target; revealIO.unobserve(el);
+      el.style.transitionDelay = `${Math.min(batch++, 6) * 90}ms`;
+      el.classList.add('in');
+      clearTimeout(timer); timer = setTimeout(() => { batch = 0; }, 120);
+      setTimeout(() => { el.classList.remove('reveal', 'in'); el.style.transitionDelay = ''; }, 1400);
+    });
+  }, { rootMargin: '0px 0px -8% 0px', threshold: .08 });
+  secs.forEach(s => { s.classList.add('reveal'); revealIO.observe(s); });
+}
+
+/* ----- Fond vivant : suit la couverture survolée ----- */
+const Glow = { el: null, cur: 0, key: '', timer: 0 };
+function glowEl() {
+  if (Glow.el) return Glow.el;
+  const g = document.createElement('div'); g.className = 'home-glow'; g.setAttribute('aria-hidden', 'true');
+  g.innerHTML = '<i></i><i></i>'; document.body.prepend(g); Glow.el = g; return g;
+}
+function glowTo(t, key) {
+  if (key === Glow.key) return; Glow.key = key;
+  const g = glowEl(), layers = g.children, next = layers[1 - Glow.cur];
+  next.style.background = `radial-gradient(60% 55% at 78% 0%,hsl(${t.h} ${Math.max(45, t.s)}% 52% / .34),transparent 70%),radial-gradient(55% 50% at 5% 95%,hsl(${(t.h + 35) % 360} ${Math.max(40, t.s)}% 45% / .18),transparent 70%)`;
+  next.classList.add('on'); layers[Glow.cur].classList.remove('on'); Glow.cur = 1 - Glow.cur;
+}
+function glowShow(on) { const g = glowEl(); g.classList.toggle('show', on); document.body.classList.toggle('glow-on', on); if (!on) Glow.key = ''; }
+function glowFor(w) { if (!w) return; coverTint(w).then(t => { if (parseRoute().view === 'dashboard' && $('#sheet').hidden) glowTo(t, w.id); }); }
+(function glowHover() {
+  document.addEventListener('pointerover', e => {
+    if (e.pointerType === 'touch' || parseRoute().view !== 'dashboard') return;
+    const c = e.target.closest && e.target.closest('#main [data-id], #main [data-cover-id]'); if (!c) return;
+    const w = byId(c.dataset.id || c.dataset.coverId); if (!w) return;
+    clearTimeout(Glow.timer); Glow.timer = setTimeout(() => glowFor(w), 90);
+  });
+})();
+function homeEnter(main) {
+  glowShow(true);
+  const front = deckList()[deckIndex(deckList())] || currentOf('anime')[0];
+  if (front) glowFor(front); else glowTo({ h: 262, s: 70, l: 55 }, 'default');
+  rollNumbers(main); setupReveal(main);
+  if (!IN_CLAUDE) setTimeout(() => loadSchedule(false).then(() => { if (parseRoute().view === 'dashboard' && !state.openId && todayReleases().length !== (state.todayN ?? -1)) refresh(); }), 400);
+}
+document.addEventListener('click', e => {
+  if (e.target.closest('[data-action="greet-edit"]')) { state.nameEdit = true; refresh(); const i = $('#greet-name'); if (i) { i.focus(); i.select(); } }
+});
+document.addEventListener('change', e => {
+  if (e.target.id !== 'greet-name') return;
+  userName = e.target.value.trim().slice(0, 30); try { localStorage.setItem('al_name', userName); } catch (err) { }
+  state.nameEdit = false; refresh();
+});
+document.addEventListener('keydown', e => { if (e.target.id === 'greet-name' && e.key === 'Enter') { e.preventDefault(); e.target.blur(); } });
 
 /* ---------- Démarrage ---------- */
 (async function boot() {
