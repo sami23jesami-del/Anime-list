@@ -601,7 +601,7 @@ body.tl-dragging,body.tl-dragging *{cursor:grabbing!important;-webkit-user-selec
 .hand-card:focus-visible{outline:2px solid var(--violet);outline-offset:3px}
 .hand-ep{position:absolute;left:6px;bottom:6px;font:700 10.5px/1 var(--mono);background:rgba(7,7,11,.8);padding:4px 6px;border-radius:6px;color:var(--text)}
 @media (hover:hover) and (pointer:fine){.hand-card:not(.up):hover{--lift:-24px}}
-.view.enter .hand-card{animation:deal .8s var(--spring) backwards;animation-delay:calc(var(--i,0) * 70ms + 200ms)}
+
 @keyframes deal{from{opacity:0;transform:translate3d(0,110%,0) rotate(0deg) scale(.85)}}
 @media (prefers-reduced-motion:reduce){.deck-card,.hand-card{transition-duration:.01s}.view.enter .deck-card,.view.enter .hand-card{animation:none}}
 
@@ -658,7 +658,8 @@ body::after{transition:opacity .8s ease}
 .ring-bg{stroke:var(--surface-3)}
 .ring-fg{stroke:var(--violet);stroke-linecap:round;transition:stroke-dashoffset 1.5s cubic-bezier(.2,.8,.2,1)}
 .r-a .ring-fg{stroke:var(--blue)}.r-d .ring-fg{stroke:#34d399}.r-g .ring-fg{stroke:var(--cyan)}
-.reveal:not(.in) .ring-fg{stroke-dashoffset:var(--len)!important}
+.ring.rv:not(.in) .ring-fg{stroke-dashoffset:var(--len)!important}
+.ring.rv .ring-fg{transition-delay:calc(var(--rd,0ms) + 120ms)}
 .ring-v{position:absolute;left:16px;top:50%;width:72px;height:72px;margin-top:-36px;display:flex;align-items:center;justify-content:center;gap:1px;font:700 17px/1 var(--mono)}
 .ring-v small{font-size:10px;color:var(--muted)}
 .ring-l{font-weight:700;align-self:end}
@@ -670,9 +671,13 @@ body::after{transition:opacity .8s ease}
 @keyframes roll{from{transform:translate3d(0,0,0)}}
 .ring-v .roll-col,.ring-v .roll-strip{height:1em;line-height:1em}
 .ring-v .roll-strip{transform:translate3d(0,calc(var(--n) * -1em),0)}
-.reveal{opacity:0;transform:translate3d(0,30px,0);transition:opacity .7s ease,transform .85s var(--spring)}
-.reveal.in{opacity:1;transform:none}
-@media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none}.new-badge{animation:none}}
+.rv{opacity:0;translate:0 36px;scale:.94;transition:opacity .5s ease,translate .8s var(--spring),scale .8s var(--spring);transition-delay:var(--rd,0ms)}
+.rv.rv-top{translate:0 -36px}
+.rv.in{opacity:1;translate:none;scale:none}
+.rv.rv-now{transition:none!important}
+.view.enter .rv{animation:none!important}
+.hand.deal .hand-card{animation:deal .8s var(--spring) backwards;animation-delay:calc(var(--i,0) * 70ms + var(--rd,0ms) + 120ms)}
+@media (prefers-reduced-motion:reduce){.rv{opacity:1;translate:none;scale:none}.new-badge{animation:none}.hand.deal .hand-card{animation:none}}
 </style>
 </head>
 <body>
@@ -1808,6 +1813,8 @@ function render() {
   const entering = key !== state.lastKey; state.lastKey = key;
   main.innerHTML = html;
   if (entering && main.firstElementChild) { main.firstElementChild.classList.add('enter'); countUp(main); if (route.view === 'dashboard') homeEnter(main); }
+  else if (route.view === 'dashboard') setupReveal(main, true);
+  if (route.view !== 'dashboard' && revealIO) { revealIO.disconnect(); revealIO = null; }
   if (route.view !== 'dashboard' && Glow.el) glowShow(false);
   if (keepImport) $('#import-box').value = keepImport;
   renderNowbar();
@@ -3175,7 +3182,7 @@ function ringsHTML() {
 }
 
 /* ----- Chiffres qui défilent (compteur mécanique) ----- */
-function rollNumbers(root) {
+function rollNumbers(root, base = 0) {
   if (reducedMotion()) return;
   root.querySelectorAll('.tile .v, .ring-v').forEach((el, k) => {
     const node = el.firstChild; if (!node || node.nodeType !== 3) return;
@@ -3187,32 +3194,53 @@ function rollNumbers(root) {
       const col = document.createElement('span'); col.className = 'roll-col'; col.setAttribute('aria-hidden', 'true');
       const strip = document.createElement('span'); strip.className = 'roll-strip';
       strip.textContent = [...'0123456789', ...'0123456789'.slice(0, +ch + 1)].join('\n');
-      strip.style.setProperty('--n', 10 + (+ch)); strip.style.animationDelay = `${(k * 60 + di * 70)}ms`;
+      strip.style.setProperty('--n', 10 + (+ch)); strip.style.animationDelay = `${(base + k * 60 + di * 70)}ms`;
       col.appendChild(strip); wrap.appendChild(col); di++;
     });
     node.replaceWith(wrap);
-    setTimeout(() => { if (wrap.isConnected) wrap.replaceWith(document.createTextNode(txt)); }, 1600 + k * 60 + di * 70);
+    setTimeout(() => { if (wrap.isConnected) wrap.replaceWith(document.createTextNode(txt)); }, 1600 + base + k * 60 + di * 70);
   });
 }
 
-/* ----- Entrée en cascade au chargement et au défilement ----- */
+/* ----- Apparition au défilement, élément par élément, rejouée à chaque passage ----- */
+const RV_SEL = '.greet, .deck-wrap, .today-sec > .sec-head, .today-card, .hero, .alert-panel, .tile, .ring, .goals, .view > .sec > .sec-head, .shelf > *, .rail > *, .split > .panel, .hand-wrap > .sec-head, .hand-info, .hand, .view > .notice, .view > .empty';
 let revealIO = null;
-function setupReveal(main) {
+function setupReveal(main, instant) {
   if (revealIO) { revealIO.disconnect(); revealIO = null; }
   if (reducedMotion() || !('IntersectionObserver' in window)) return;
-  const secs = [...main.querySelectorAll('.view > section, .view > .notice')];
+  const els = [...main.querySelectorAll(RV_SEL)];
+  const skip = new WeakSet(), vh = innerHeight;
   let batch = 0, timer = 0;
+  els.forEach(el => {
+    el.classList.add('rv');
+    if (!instant) return;
+    const r = el.getBoundingClientRect();
+    if (r.bottom > 0 && r.top < vh) { el.classList.add('in', 'rv-now'); skip.add(el); }
+    else if (r.bottom <= 0) el.classList.add('rv-top');
+  });
+  if (instant) requestAnimationFrame(() => requestAnimationFrame(() => els.forEach(el => el.classList.remove('rv-now'))));
   revealIO = new IntersectionObserver(es => {
-    es.forEach(en => {
-      if (!en.isIntersecting) return;
-      const el = en.target; revealIO.unobserve(el);
-      el.style.transitionDelay = `${Math.min(batch++, 6) * 90}ms`;
-      el.classList.add('in');
-      clearTimeout(timer); timer = setTimeout(() => { batch = 0; }, 120);
-      setTimeout(() => { el.classList.remove('reveal', 'in'); el.style.transitionDelay = ''; }, 1400);
+    es.sort((x, y) => x.boundingClientRect.top - y.boundingClientRect.top || x.boundingClientRect.left - y.boundingClientRect.left).forEach(en => {
+      const el = en.target;
+      if (skip.has(el)) { skip.delete(el); if (en.isIntersecting) return; }
+      if (en.isIntersecting) {
+        if (el.classList.contains('in')) return;
+        const d = Math.min(batch++, 8) * 60;
+        el.style.setProperty('--rd', d + 'ms');
+        el.classList.add('in');
+        if (el.matches('.tile, .ring')) rollNumbers(el, d);
+        if (el.classList.contains('hand')) { el.classList.remove('deal'); void el.offsetWidth; el.classList.add('deal'); }
+        clearTimeout(timer); timer = setTimeout(() => { batch = 0; }, 140);
+      } else {
+        // sortie : disparaît en douceur, et reviendra du côté par lequel il est sorti
+        const top = en.boundingClientRect.top < (en.rootBounds ? en.rootBounds.top : 0);
+        el.style.setProperty('--rd', '0ms');
+        el.classList.toggle('rv-top', top);
+        el.classList.remove('in', 'deal');
+      }
     });
-  }, { rootMargin: '0px 0px -8% 0px', threshold: .08 });
-  secs.forEach(s => { s.classList.add('reveal'); revealIO.observe(s); });
+  }, { rootMargin: '0px 0px -6% 0px', threshold: .12 });
+  els.forEach(el => revealIO.observe(el));
 }
 
 /* ----- Fond vivant : suit la couverture survolée ----- */
@@ -3242,7 +3270,7 @@ function homeEnter(main) {
   glowShow(true);
   const front = deckList()[deckIndex(deckList())] || currentOf('anime')[0];
   if (front) glowFor(front); else glowTo({ h: 262, s: 70, l: 55 }, 'default');
-  rollNumbers(main); setupReveal(main);
+  setupReveal(main);
   if (!IN_CLAUDE) setTimeout(() => loadSchedule(false).then(() => { if (parseRoute().view === 'dashboard' && !state.openId && todayReleases().length !== (state.todayN ?? -1)) refresh(); }), 400);
 }
 document.addEventListener('click', e => {

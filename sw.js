@@ -1,7 +1,7 @@
 /* Anime Liste : fonctionnement hors ligne.
    L'app elle-même est servie depuis le cache (mise à jour en arrière-plan),
    les polices et couvertures sont gardées en cache, les API (AniList, Jikan) passent toujours par le réseau. */
-const VERSION = 'v7';
+const VERSION = 'v8';
 const SHELL = 'al-shell-' + VERSION, RUNTIME = 'al-runtime-' + VERSION;
 const SHELL_FILES = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 
