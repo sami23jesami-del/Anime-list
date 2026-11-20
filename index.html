@@ -1572,7 +1572,9 @@ function pickResult(i) {
 function exportJSON() { return JSON.stringify({ app: 'anime-liste', version: 2, exportedAt: new Date().toISOString(), settings: { goals, tierlists: tierState.lists }, works: state.works, history: state.history }, null, 2); }
 function doExport() {
   if (!state.works.length) { toast('Ta bibliothèque est vide sur cette version de l\'appli : il n\'y a rien à exporter. Ouvre la version où tu vois tes œuvres.', 'error'); return; }
-  const json = exportJSON(), name = `anime-liste-${new Date().toISOString().slice(0, 10)}.json`;
+  const json = exportJSON(), d = new Date(), pad = n => String(n).padStart(2, '0'), n = state.works.length;
+  const name = `anime-liste-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}-${pad(d.getHours())}h${pad(d.getMinutes())}-${n}-oeuvre${n > 1 ? 's' : ''}.json`;
+  if (IN_CLAUDE) { const box = $('#export-box'); if (box) { box.value = json; box.hidden = false; } toast('Le téléchargement est bloqué dans la version claude.ai : utilise « Copier le JSON », ou exporte depuis l\'appli installée.', 'error'); return; }
   try {
     const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
     const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
@@ -1599,7 +1601,9 @@ async function doImport() {
   const works = rawWorks.map(normalizeWork).filter(Boolean);
   const history = (Array.isArray(data.history) ? data.history : []).map(normalizeHistory).filter(Boolean);
   const skipped = rawWorks.length - works.length;
-  if (!rawWorks.length) { msg.innerHTML = '<div class="notice err"><b>Ce fichier est vide : il ne contient aucune œuvre.</b> La sauvegarde a été faite depuis une copie de l\'appli où ta bibliothèque est vide. Sur ton PC, ouvre la version où tu vois bien tes œuvres, puis exporte de nouveau.</div>'; return; }
+  const when = data && data.exportedAt && !isNaN(Date.parse(data.exportedAt)) ? new Date(data.exportedAt).toLocaleString('fr-FR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : null;
+  const fname = $('#import-name') ? $('#import-name').textContent : '';
+  if (!rawWorks.length) { msg.innerHTML = `<div class="notice err"><b>Ce fichier ne contient aucune œuvre.</b>${fname ? ` Fichier choisi : « ${esc(fname)} ».` : ''}${when ? ` Il a été exporté le ${esc(when)}.` : ''} C'est sûrement un ancien fichier, ou un export fait depuis une copie vide de l'appli. Exporte de nouveau depuis la copie où tu vois tes œuvres : le nouveau fichier porte le nombre d'œuvres dans son nom (par exemple « …-29-oeuvres.json »). Choisis bien celui-là.</div>`; return; }
   if (!works.length) { msg.innerHTML = '<div class="notice err">Aucune œuvre valide dans ce fichier.</div>'; return; }
   const replace = $('#im-replace').checked;
   if (data.settings && data.settings.goals) setGoals(data.settings.goals);
@@ -1616,7 +1620,7 @@ async function doImport() {
   if (data.settings && Array.isArray(data.settings.tierlists)) importTiers(data.settings.tierlists, replace);
   $('#import-box').value = '';
   refresh(); scheduleSync(true, 300);
-  const m = $('#import-msg'); if (m) m.innerHTML = `<div class="notice">${works.length} œuvre${works.length > 1 ? 's' : ''} importée${works.length > 1 ? 's' : ''}${skipped ? `, ${skipped} ignorée${skipped > 1 ? 's' : ''} (invalides)` : ''}.</div>`;
+  const m = $('#import-msg'); if (m) m.innerHTML = `<div class="notice">${when ? `Sauvegarde du ${esc(when)} : ` : ''}${works.length} œuvre${works.length > 1 ? 's' : ''} importée${works.length > 1 ? 's' : ''}${skipped ? `, ${skipped} ignorée${skipped > 1 ? 's' : ''} (invalides)` : ''}.</div>`;
   toast('Import terminé.', 'ok');
 }
 
