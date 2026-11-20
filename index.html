@@ -678,6 +678,9 @@ body::after{transition:opacity .8s ease}
 .view.enter .rv{animation:none!important}
 .hand.deal .hand-card{animation:deal .8s var(--spring) backwards;animation-delay:calc(var(--i,0) * 70ms + var(--rd,0ms) + 120ms)}
 @media (prefers-reduced-motion:reduce){.rv{opacity:1;translate:none;scale:none}.new-badge{animation:none}.hand.deal .hand-card{animation:none}}
+.sync-steps{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.sync-steps a,.sync-panel a{color:var(--violet-soft)}
+.sync-panel{border-color:rgba(139,92,246,.45);background:linear-gradient(135deg,rgba(139,92,246,.12),transparent 60%),var(--surface)}
 </style>
 </head>
 <body>
@@ -865,6 +868,7 @@ function markSaved() {
   const el = $('#save-state'); if (!el) return;
   el.innerHTML = Storage.mode === 'memory' ? '<span class="dot warn"></span>Non sauvegardé' : '<span class="dot"></span>Sauvegardé';
   if (typeof scheduleBackup === 'function') scheduleBackup();
+  if (typeof syncSoon === 'function') syncSoon();
   clearTimeout(savedTimer);
   savedTimer = setTimeout(() => { el.innerHTML = Storage.mode === 'memory' ? '<span class="dot warn"></span>Non sauvegardé' : '<span class="dot"></span>Sauvegarde auto'; }, 1800);
 }
@@ -936,6 +940,7 @@ async function deleteWork(id) {
   const w = byId(id); if (!w) return;
   const ok = await confirmDialog({ title: 'Supprimer cette œuvre ?', text: `« ${w.title} » et son historique seront supprimés définitivement.`, ok: 'Supprimer', danger: true });
   if (!ok) return;
+  addTomb(id);
   state.works = state.works.filter(x => x.id !== id);
   const hIds = state.history.filter(h => h.workId === id).map(h => h.id);
   state.history = state.history.filter(h => h.workId !== id);
@@ -1273,6 +1278,7 @@ function viewData() {
     <section class="panel"><h3>État du stockage</h3>
       <p style="margin:0;color:var(--muted)">${Storage.mode === 'idb' ? '<span class="dot"></span>Base de données IndexedDB active. Sauvegarde automatique à chaque modification.' : Storage.mode === 'local' ? '<span class="dot"></span>Stockage local du navigateur actif (IndexedDB indisponible). Sauvegarde automatique à chaque modification.' : '<span class="dot warn"></span>Ce navigateur bloque le stockage (navigation privée ?). Tes données seront perdues à la fermeture : exporte-les avant.'}</p>
       <p style="margin:0" class="mono">${state.works.length} œuvres · ${state.history.length} entrées d'historique</p></section>
+    ${syncPanelHTML()}
     ${installPanelHTML()}
     ${backupPanelHTML()}
     <section class="panel"><h3>Exporter ma bibliothèque</h3>
@@ -2454,7 +2460,7 @@ document.addEventListener('click', async e => {
     case 'copy-export': copyExport(); break;
     case 'import': doImport(); break;
     case 'clear-history': { const ok = await confirmDialog({ title: "Effacer l'historique ?", text: 'Ta progression est conservée, seul le journal des chapitres et épisodes est supprimé.', ok: 'Effacer', danger: true }); if (!ok) break; state.history = []; await persist(() => Storage.clear('history')); refresh(); toast('Historique effacé.', 'ok'); break; }
-    case 'wipe': { const ok = await confirmDialog({ title: 'Tout supprimer ?', text: `${state.works.length} œuvres et tout l'historique seront supprimés de cet appareil. Pense à exporter avant.`, ok: 'Tout supprimer', danger: true }); if (!ok) break; state.works = []; state.history = []; await persist(async () => { await Storage.clear('works'); await Storage.clear('history'); }); refresh(); toast('Bibliothèque vidée.', 'ok'); break; }
+    case 'wipe': { const ok = await confirmDialog({ title: 'Tout supprimer ?', text: `${state.works.length} œuvres et tout l'historique seront supprimés de cet appareil. Pense à exporter avant.`, ok: 'Tout supprimer', danger: true }); if (!ok) break; state.works.forEach(w => addTomb(w.id)); state.works = []; state.history = []; await persist(async () => { await Storage.clear('works'); await Storage.clear('history'); }); refresh(); toast('Bibliothèque vidée.', 'ok'); break; }
   }
 });
 document.addEventListener('change', async e => {
@@ -2876,7 +2882,7 @@ document.addEventListener('click', async e => {
     case 'tl-up': case 'tl-down': if (tl && tier) { const i = tl.tiers.indexOf(tier), j = i + (a === 'tl-up' ? -1 : 1); if (j >= 0 && j < tl.tiers.length) { [tl.tiers[i], tl.tiers[j]] = [tl.tiers[j], tl.tiers[i]]; saveTiers(tl); render(); } } break;
     case 'tl-del': if (tl) {
       if (!await confirmDialog({ title: `Supprimer « ${tl.name} » ?`, text: 'Cette tier list sera supprimée. Tes œuvres et leurs notes ne changent pas.', ok: 'Supprimer', danger: true })) break;
-      tierState.lists = tierState.lists.filter(t => t !== tl); tierState.cur = null; state.tlEdit = false; saveTiers(); render(); toast('Tier list supprimée.', 'ok');
+      addTomb('tl:' + tl.id); tierState.lists = tierState.lists.filter(t => t !== tl); tierState.cur = null; state.tlEdit = false; saveTiers(); render(); toast('Tier list supprimée.', 'ok');
     } break;
     case 'tl-auto': if (tl) {
       const n = tl.tiers.length; let c = 0;
@@ -3291,6 +3297,164 @@ document.addEventListener('change', e => {
 });
 document.addEventListener('keydown', e => { if (e.target.id === 'greet-name' && e.key === 'Enter') { e.preventDefault(); e.target.blur(); } });
 
+/* ==========================================================
+   Synchronisation PC ↔ téléphone via un Gist GitHub secret
+   ========================================================== */
+const SYNC_FILE = 'anime-liste-sync.json', SYNC_DESC = 'Anime Liste – synchronisation (ne pas modifier)';
+const Sync = { token: '', gistId: '', login: '', at: 0, status: 'off', msg: '', busy: false, timer: 0, lastPushed: '', applying: false };
+try { const c = JSON.parse(localStorage.getItem('al_sync') || 'null'); if (c && c.token) Object.assign(Sync, { token: c.token, gistId: c.gistId || '', login: c.login || '', at: c.at || 0, lastPushed: c.lastPushed || '', status: 'idle' }); } catch (e) { }
+function saveSyncCfg() { try { localStorage.setItem('al_sync', JSON.stringify({ token: Sync.token, gistId: Sync.gistId, login: Sync.login, at: Sync.at, lastPushed: Sync.lastPushed })); } catch (e) { } }
+// suppressions mémorisées pour qu'une œuvre supprimée ne revienne pas depuis l'autre appareil
+let tombs = {}; try { tombs = JSON.parse(localStorage.getItem('al_tomb') || '{}') || {}; } catch (e) { tombs = {}; }
+function addTomb(id) { tombs[id] = Date.now(); try { localStorage.setItem('al_tomb', JSON.stringify(tombs)); } catch (e) { } }
+
+async function gh(path, opts = {}) {
+  const ctrl = new AbortController(), to = setTimeout(() => ctrl.abort(), 15000);
+  try {
+    const r = await fetch('https://api.github.com' + path, { ...opts, signal: ctrl.signal, cache: 'no-store', headers: { Accept: 'application/vnd.github+json', Authorization: 'Bearer ' + Sync.token, ...(opts.body ? { 'Content-Type': 'application/json' } : {}) } });
+    if (r.status === 401) throw new Error('Code d\'accès refusé : il est faux ou a expiré. Crée-en un nouveau.');
+    if (r.status === 403 || r.status === 404) { const j = await r.json().catch(() => ({})); throw Object.assign(new Error(j.message && /scope|permission|Resource not accessible/i.test(j.message) ? 'Ce code n\'a pas l\'autorisation « gist ». Recrée-le en cochant « gist ».' : 'GitHub refuse la demande (' + r.status + ').'), { status: r.status }); }
+    if (!r.ok) throw new Error('GitHub ne répond pas correctement (' + r.status + ').');
+    return r.status === 204 ? null : r.json();
+  } catch (e) { if (e.name === 'AbortError') throw new Error('GitHub ne répond pas (connexion lente ?).'); if (e instanceof TypeError) throw new Error('Pas de connexion à internet.'); throw e; }
+  finally { clearTimeout(to); }
+}
+function syncPayload() {
+  return { app: 'anime-liste', kind: 'sync', version: 3, works: state.works, history: state.history.slice(0, 5000), tombs, tierlists: tierState.lists };
+}
+const payloadKey = p => JSON.stringify([p.works.map(w => w.id + ':' + w.updatedAt).sort(), p.history.length, Object.keys(p.tombs).length, p.tierlists.map(t => t.id + ':' + t.updatedAt).sort()]);
+async function readRemote() {
+  const g = await gh('/gists/' + Sync.gistId);
+  const f = g.files && g.files[SYNC_FILE]; if (!f) return null;
+  let txt = f.content;
+  if (f.truncated && f.raw_url) { const r = await fetch(f.raw_url, { cache: 'no-store' }); txt = await r.text(); }
+  try { return JSON.parse(txt); } catch (e) { return null; }
+}
+async function findOrCreateGist() {
+  for (let page = 1; page <= 5; page++) {
+    const list = await gh(`/gists?per_page=100&page=${page}`);
+    const g = (list || []).find(x => x.description === SYNC_DESC && x.files && x.files[SYNC_FILE]);
+    if (g) return { id: g.id, created: false };
+    if (!list || list.length < 100) break;
+  }
+  const g = await gh('/gists', { method: 'POST', body: JSON.stringify({ description: SYNC_DESC, public: false, files: { [SYNC_FILE]: { content: JSON.stringify(syncPayload()) } } }) });
+  return { id: g.id, created: true };
+}
+// Fusion : pour chaque œuvre, la modification la plus récente gagne ; rien n'est perdu
+function mergeData(remote) {
+  const rt = remote && remote.tombs && typeof remote.tombs === 'object' ? remote.tombs : {};
+  const T = { ...tombs }; Object.entries(rt).forEach(([k, v]) => { if (!(T[k] >= v)) T[k] = +v || 0; });
+  const map = new Map();
+  const put = w => { if (!w) return; const cur = map.get(w.id); if (!cur || (w.updatedAt || 0) > (cur.updatedAt || 0)) map.set(w.id, w); };
+  state.works.forEach(put);
+  (Array.isArray(remote && remote.works) ? remote.works : []).map(normalizeWork).filter(Boolean).forEach(put);
+  const works = [...map.values()].filter(w => !(T[w.id] && T[w.id] >= (w.updatedAt || 0)));
+  const hm = new Map(state.history.map(h => [h.id, h]));
+  (Array.isArray(remote && remote.history) ? remote.history : []).map(normalizeHistory).filter(Boolean).forEach(h => { if (!hm.has(h.id)) hm.set(h.id, h); });
+  const ids = new Set(works.map(w => w.id));
+  const history = [...hm.values()].filter(h => ids.has(h.workId) || !T[h.workId]).sort((a, b) => b.at - a.at).slice(0, 5000);
+  const tm = new Map(tierState.lists.map(t => [t.id, t]));
+  (Array.isArray(remote && remote.tierlists) ? remote.tierlists : []).map(normTierList).filter(Boolean).forEach(t => { const c = tm.get(t.id); if (!c || t.updatedAt > c.updatedAt) tm.set(t.id, t); });
+  const tierlists = [...tm.values()].filter(t => !(T['tl:' + t.id] && T['tl:' + t.id] >= t.updatedAt));
+  return { works, history, tombs: T, tierlists };
+}
+async function applyMerged(m) {
+  const before = new Map(state.works.map(w => [w.id, w.updatedAt]));
+  const changed = m.works.filter(w => before.get(w.id) !== w.updatedAt);
+  const keep = new Set(m.works.map(w => w.id)), removed = state.works.filter(w => !keep.has(w.id)).map(w => w.id);
+  const newHist = m.history.filter(h => !state.history.some(x => x.id === h.id));
+  const tlChanged = JSON.stringify(m.tierlists.map(t => t.id + t.updatedAt).sort()) !== JSON.stringify(tierState.lists.map(t => t.id + t.updatedAt).sort());
+  tombs = m.tombs; try { localStorage.setItem('al_tomb', JSON.stringify(tombs)); } catch (e) { }
+  if (!changed.length && !removed.length && !newHist.length && !tlChanged) return 0;
+  Sync.applying = true;
+  try {
+    state.works = m.works; state.history = m.history;
+    if (tlChanged) { tierState.lists = m.tierlists; saveTiers(); }
+    await persist(async () => { if (changed.length) await Storage.put('works', changed); if (removed.length) await Storage.del('works', removed); if (newHist.length) await Storage.put('history', newHist); });
+  } finally { Sync.applying = false; }
+  return changed.length + removed.length;
+}
+async function syncNow(manual) {
+  if (!Sync.token || Sync.busy || IN_CLAUDE) return;
+  if (navigator.onLine === false) { Sync.status = 'offline'; Sync.msg = 'Hors ligne : la synchro reprendra au retour d\'internet.'; syncUI(); return; }
+  Sync.busy = true; Sync.status = 'busy'; syncUI();
+  try {
+    let remote = null;
+    if (Sync.gistId) { try { remote = await readRemote(); } catch (e) { if (e.status === 404) Sync.gistId = ''; else throw e; } }
+    if (!Sync.gistId) { const r = await findOrCreateGist(); Sync.gistId = r.id; if (!r.created) remote = await readRemote(); }
+    const m = mergeData(remote);
+    const n = await applyMerged(m);
+    const local = syncPayload(), key = payloadKey(local), remoteKey = remote ? payloadKey({ works: (remote.works || []).map(normalizeWork).filter(Boolean), history: remote.history || [], tombs: remote.tombs || {}, tierlists: (remote.tierlists || []).map(normTierList).filter(Boolean) }) : '';
+    if (key !== remoteKey) {
+      await gh('/gists/' + Sync.gistId, { method: 'PATCH', body: JSON.stringify({ files: { [SYNC_FILE]: { content: JSON.stringify({ ...local, syncedAt: new Date().toISOString() }) } } }) });
+    }
+    Sync.lastPushed = key; Sync.at = Date.now(); Sync.status = 'ok'; Sync.msg = '';
+    saveSyncCfg();
+    if (n) { refresh(); if (manual || n) toast(`Synchro : ${n} œuvre${n > 1 ? 's' : ''} mise${n > 1 ? 's' : ''} à jour depuis ton autre appareil.`, 'ok'); }
+    else if (manual) toast('Tout est déjà synchronisé.', 'ok');
+  } catch (e) {
+    Sync.status = 'error'; Sync.msg = e.message || String(e);
+    if (manual) toast('Synchro impossible : ' + Sync.msg, 'error');
+  } finally { Sync.busy = false; syncUI(); }
+}
+function syncSoon(delay = 3000) {
+  if (!Sync.token || Sync.applying || IN_CLAUDE) return;
+  clearTimeout(Sync.timer); Sync.timer = setTimeout(() => syncNow(false), delay);
+}
+async function connectSync() {
+  const inp = $('#sync-token'); const tok = (inp && inp.value || '').trim().replace(/\s+/g, '');
+  if (!/^(ghp_|github_pat_|gho_)[A-Za-z0-9_]{20,}$/.test(tok)) { toast('Ce code ne ressemble pas à un code GitHub (il commence par « ghp_ »).', 'error'); return; }
+  Sync.token = tok; Sync.gistId = ''; Sync.status = 'busy'; syncUI();
+  try {
+    const u = await gh('/user'); Sync.login = u.login || '';
+    saveSyncCfg();
+    await syncNow(false);
+    if (Sync.status === 'ok') { toast(`Synchronisation activée sur ce compte GitHub (${Sync.login}).`, 'ok'); celebrate(); }
+    else throw new Error(Sync.msg);
+  } catch (e) {
+    Sync.token = ''; Sync.status = 'error'; Sync.msg = e.message; saveSyncCfg(); toast('Connexion impossible : ' + e.message, 'error');
+  }
+  refresh();
+}
+function stopSync() { Object.assign(Sync, { token: '', gistId: '', login: '', status: 'off', msg: '', lastPushed: '' }); try { localStorage.removeItem('al_sync'); } catch (e) { } refresh(); toast('Synchronisation désactivée sur cet appareil. Tes œuvres restent ici.', 'ok'); }
+function syncStatusText() {
+  if (Sync.status === 'busy') return '<span class="dot"></span>Synchronisation en cours…';
+  if (Sync.status === 'error') return `<span class="dot warn"></span>${esc(Sync.msg)}`;
+  if (Sync.status === 'offline') return `<span class="dot warn"></span>${esc(Sync.msg)}`;
+  return `<span class="dot"></span>Active${Sync.login ? ` (compte ${esc(Sync.login)})` : ''}${Sync.at ? ` · dernière synchro ${relTime(Sync.at)}` : ''}.`;
+}
+function syncUI() {
+  const el = $('#sync-status'); if (el) el.innerHTML = syncStatusText();
+  const chip = $('#save-state'); if (chip && Sync.token && Sync.status === 'busy') chip.innerHTML = '<span class="dot"></span>Synchro…';
+}
+function syncPanelHTML() {
+  if (IN_CLAUDE) return `<section class="panel"><h3>Synchronisation PC ↔ téléphone</h3><p style="margin:0;color:var(--muted)">Indisponible dans la version ouverte sur claude.ai. Utilise l'appli installée ou le site en ligne.</p></section>`;
+  if (Sync.token) return `<section class="panel sync-panel"><h3>Synchronisation PC ↔ téléphone</h3>
+    <p style="margin:0" id="sync-status">${syncStatusText()}</p>
+    <p style="margin:0;color:var(--muted);font-size:13px">Tes œuvres se synchronisent toutes seules à l'ouverture de l'appli et après chaque modification. Sur ton autre appareil, colle le même code (ou un autre code du même compte GitHub).</p>
+    <div class="d-actions"><button class="btn primary" type="button" data-action="sync-now">⟳ Synchroniser maintenant</button><button class="btn ghost" type="button" data-action="sync-stop">Désactiver sur cet appareil</button></div></section>`;
+  return `<section class="panel sync-panel"><h3>Synchronisation PC ↔ téléphone</h3>
+    <p style="margin:0;color:var(--muted)">Plus besoin d'exporter : ta liste reste la même sur ton PC et ton téléphone. Elle est rangée dans un espace secret de ton compte GitHub (gratuit).</p>
+    <ol class="sync-steps">
+      <li>Ouvre <a href="https://github.com/settings/tokens/new?scopes=gist&description=Anime%20Liste%20synchro" target="_blank" rel="noopener">cette page GitHub ↗</a> (connecte-toi si besoin). La case <b>gist</b> est déjà cochée.</li>
+      <li>Dans « Expiration », choisis <b>No expiration</b>, puis clique en bas sur <b>Generate token</b>.</li>
+      <li>Copie le code qui commence par <b>ghp_</b> et colle-le ici :</li>
+    </ol>
+    <div class="d-actions" style="align-items:center"><input class="input" id="sync-token" type="password" autocomplete="off" spellcheck="false" placeholder="ghp_…" style="flex:1;min-width:220px"><button class="btn primary" type="button" data-action="sync-connect">Connecter</button></div>
+    ${Sync.status === 'error' && Sync.msg ? `<div class="notice err">${esc(Sync.msg)}</div>` : ''}
+    <p style="margin:0;color:var(--faint);font-size:12.5px">Fais pareil sur ton autre appareil, avec le même code ou un nouveau code créé de la même façon. Ce code donne seulement accès à tes « gists » (de petits fichiers GitHub), pas à tes projets ni à ton mot de passe. Il reste enregistré sur l'appareil.</p></section>`;
+}
+document.addEventListener('click', e => {
+  const a = e.target.closest('[data-action^="sync-"]'); if (!a) return;
+  if (a.dataset.action === 'sync-connect') connectSync();
+  else if (a.dataset.action === 'sync-now') syncNow(true);
+  else if (a.dataset.action === 'sync-stop') stopSync();
+});
+document.addEventListener('keydown', e => { if (e.target.id === 'sync-token' && e.key === 'Enter') { e.preventDefault(); connectSync(); } });
+document.addEventListener('visibilitychange', () => { if (!document.hidden && Sync.token && Date.now() - Sync.at > 20000) syncSoon(300); });
+window.addEventListener('online', () => syncSoon(500));
+setInterval(() => { if (!document.hidden && Sync.token && Date.now() - Sync.at > 120000) syncNow(false); }, 60000);
+
 /* ---------- Démarrage ---------- */
 (async function boot() {
   loadPrefs();
@@ -3303,6 +3467,7 @@ document.addEventListener('keydown', e => { if (e.target.id === 'greet-name' && 
   render(); markSaved();
   initFileBackup();
   scheduleSync(false, 1200);
+  syncSoon(1500);
   if (Storage.mode === 'memory') toast('Ce navigateur bloque le stockage : tes données ne seront pas conservées. Exporte-les avant de fermer.', 'error');
 })();
 </script>
