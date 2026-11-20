@@ -759,8 +759,9 @@ function relTime(t) {
 /* ---------- Normalisation (formulaires, import) ---------- */
 function normalizeWork(o) {
   if (!o || typeof o !== 'object') return null;
-  const type = o.type === 'anime' ? 'anime' : o.type === 'manga' ? 'manga' : null;
-  const title = String(o.title ?? '').trim().slice(0, 300);
+  const tt = String(o.type ?? o.kind ?? '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const type = /^(anime|tv|ona|ova|movie|film|serie)s?$/.test(tt) ? 'anime' : /^(manga|manhwa|manhua|scan|webtoon|light ?novel|novel)s?$/.test(tt) ? 'manga' : null;
+  const title = String((o.title && typeof o.title === 'object' ? (o.title.romaji || o.title.english || o.title.native) : (o.title ?? o.titre ?? o.name)) ?? '').trim().slice(0, 300);
   if (!type || !title) return null;
   let total = toInt(o.total); if (!(total > 0)) total = null;
   let current = Math.max(0, toInt(o.current) || 0); if (total) current = Math.min(current, total);
@@ -1268,7 +1269,7 @@ function viewStats() {
 
 function viewData() {
   return `<div class="view" style="max-width:860px">
-    <div class="page-head"><div><h1>Sauvegarde & import</h1><p>Tes données sont enregistrées automatiquement dans ce navigateur, sur cet appareil. Exporte-les régulièrement pour les garder en lieu sûr ou les transférer.</p></div></div>
+    <div class="page-head"><div><h1>Sauvegarde & import</h1><p><b>${state.works.length} œuvre${state.works.length > 1 ? 's' : ''} sur cette version de l'appli.</b> Tes données sont enregistrées automatiquement dans ce navigateur, sur cet appareil. Exporte-les régulièrement pour les garder en lieu sûr ou les transférer.</p></div></div>
     <section class="panel"><h3>État du stockage</h3>
       <p style="margin:0;color:var(--muted)">${Storage.mode === 'idb' ? '<span class="dot"></span>Base de données IndexedDB active. Sauvegarde automatique à chaque modification.' : Storage.mode === 'local' ? '<span class="dot"></span>Stockage local du navigateur actif (IndexedDB indisponible). Sauvegarde automatique à chaque modification.' : '<span class="dot warn"></span>Ce navigateur bloque le stockage (navigation privée ?). Tes données seront perdues à la fermeture : exporte-les avant.'}</p>
       <p style="margin:0" class="mono">${state.works.length} œuvres · ${state.history.length} entrées d'historique</p></section>
@@ -1280,7 +1281,7 @@ function viewData() {
       <textarea id="export-box" readonly hidden aria-label="Contenu de la sauvegarde" style="min-height:140px;font-family:var(--mono);font-size:12px"></textarea></section>
     <section class="panel"><h3>Importer une sauvegarde</h3>
       <p style="margin:0;color:var(--muted)">Choisis un fichier exporté depuis Anime Liste, ou colle son contenu ci-dessous.</p>
-      <div class="d-actions" style="align-items:center"><label class="btn" for="import-file">Choisir un fichier…</label><input id="import-file" type="file" accept="application/json,.json" hidden data-change="import-file"><span id="import-name" style="color:var(--muted);font-size:13px"></span></div>
+      <div class="d-actions" style="align-items:center"><label class="btn" for="import-file">Choisir un fichier…</label><input id="import-file" type="file" accept=".json,application/json,text/plain,text/*" hidden data-change="import-file"><span id="import-name" style="color:var(--muted);font-size:13px"></span></div>
       <textarea id="import-box" placeholder='{"app":"anime-liste","works":[…]}' style="font-family:var(--mono);font-size:12px"></textarea>
       <div class="d-actions" style="align-items:center">
         <label style="display:flex;gap:6px;align-items:center"><input type="radio" name="import-mode" id="im-merge" value="merge" checked> Fusionner avec ma bibliothèque</label>
@@ -1570,6 +1571,7 @@ function pickResult(i) {
 /* ---------- Import / export ---------- */
 function exportJSON() { return JSON.stringify({ app: 'anime-liste', version: 2, exportedAt: new Date().toISOString(), settings: { goals, tierlists: tierState.lists }, works: state.works, history: state.history }, null, 2); }
 function doExport() {
+  if (!state.works.length) { toast('Ta bibliothèque est vide sur cette version de l\'appli : il n\'y a rien à exporter. Ouvre la version où tu vois tes œuvres.', 'error'); return; }
   const json = exportJSON(), name = `anime-liste-${new Date().toISOString().slice(0, 10)}.json`;
   try {
     const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
@@ -1590,12 +1592,14 @@ async function doImport() {
   msg.innerHTML = '';
   if (!raw) { msg.innerHTML = '<div class="notice err">Choisis un fichier ou colle le contenu d\'une sauvegarde.</div>'; return; }
   let data;
-  try { data = JSON.parse(raw); } catch (e) { msg.innerHTML = '<div class="notice err">Ce contenu n\'est pas un JSON valide.</div>'; return; }
+  try { data = JSON.parse(raw.replace(/^\uFEFF/, '')); } catch (e) { msg.innerHTML = '<div class="notice err">Ce fichier n\'est pas une sauvegarde Anime Liste (contenu illisible). Exporte-la de nouveau avec le bouton « Exporter ».</div>'; return; }
+  if (data && typeof data === 'object' && !Array.isArray(data) && !Array.isArray(data.works) && data.data && typeof data.data === 'object') data = data.data;
   const rawWorks = Array.isArray(data) ? data : Array.isArray(data.works) ? data.works : null;
   if (!rawWorks) { msg.innerHTML = '<div class="notice err">Aucune liste d\'œuvres trouvée dans ce fichier.</div>'; return; }
   const works = rawWorks.map(normalizeWork).filter(Boolean);
   const history = (Array.isArray(data.history) ? data.history : []).map(normalizeHistory).filter(Boolean);
   const skipped = rawWorks.length - works.length;
+  if (!rawWorks.length) { msg.innerHTML = '<div class="notice err"><b>Ce fichier est vide : il ne contient aucune œuvre.</b> La sauvegarde a été faite depuis une copie de l\'appli où ta bibliothèque est vide. Sur ton PC, ouvre la version où tu vois bien tes œuvres, puis exporte de nouveau.</div>'; return; }
   if (!works.length) { msg.innerHTML = '<div class="notice err">Aucune œuvre valide dans ce fichier.</div>'; return; }
   const replace = $('#im-replace').checked;
   if (data.settings && data.settings.goals) setGoals(data.settings.goals);
